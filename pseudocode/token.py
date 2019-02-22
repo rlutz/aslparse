@@ -313,21 +313,22 @@ class Tokenizer:
 
     def process_a(self, data):
         if not data:
-            raise LexError(data, pos)
-        for i, ch in enumerate(data):
-            if not (ch >= 'A' and ch <= 'Z' or ch >= 'a' and ch <= 'z'
-                      or ch == '_' or i > 0 and ch >= '0' and ch <= '9'):
-                raise LexError(data, pos)
-        self.tokens.append(token.intern_token(data, token.LinkedIdentifier))
-
-    def process_anchor(self, data):
-        if not data:
-            raise LexError(data, pos)
+            raise LexError(data, 0)
         for i, ch in enumerate(data):
             if not (ch >= 'A' and ch <= 'Z' or ch >= 'a' and ch <= 'z'
                       or ch == '_' or i > 0 and (ch >= '0' and ch <= '9'
                                                    or ch == '.')):
-                raise LexError(data, pos)
+                raise LexError(data, i)
+        self.tokens.append(token.intern_token(data, token.LinkedIdentifier))
+
+    def process_anchor(self, data):
+        if not data:
+            raise LexError(data, 0)
+        for i, ch in enumerate(data):
+            if not (ch >= 'A' and ch <= 'Z' or ch >= 'a' and ch <= 'z'
+                      or ch == '_' or i > 0 and (ch >= '0' and ch <= '9'
+                                                   or ch == '.')):
+                raise LexError(data, i)
         self.tokens.append(token.intern_token(
             data, token.DeclarationIdentifier))
 
