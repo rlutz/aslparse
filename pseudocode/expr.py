@@ -58,45 +58,81 @@ class Ternary:
     def __str__(self):
         return '%s ? %s : %s' % (str(self.condition), str(self.arg0), str(self.arg1))
 
+class Bits:
+    def __init__(self, elements):
+        self.elements = elements
+
+    def __str__(self):
+        prefix = self.elements[0][:min(len(element)
+                                       for element in self.elements)]
+        while len(prefix) > 0:
+            if next((False for element in self.elements
+                     if element[:len(prefix)] != prefix), True):
+                break
+            prefix.pop()
+        return ''.join(str(t) + '.' for t in prefix) + '<' + \
+            ', '.join('.'.join(str(t) for t in element[len(prefix):])
+                      for element in self.elements) + '>'
+
+class Values:
+    def __init__(self, members):
+        self.members = members
+
+    def __str__(self):
+        return '(' + ', '.join(str(member) for member in self.members) + ')'
+
+class Omitted:
+    def __str__(self):
+        return '-'
+
 
 # identifier :== unlinked-identifier | linked-identifier
 # identifier-chain :== identifier | identifier-chain '.' identifier
+# identifier-list :== identifier | identifier-list ',' identifier
 
 # maybe-expression-list :== <empty> | expression-list
 
-# expression0 :== identifier-chain
-#               | identifier-chain '(' maybe-expression-list ')'
-#               | identifier-chain '[' maybe-expression-list ']'
-#               | identifier-chain '<' expression-list '>'
-#               | number
-#               | bitvector
-#               | '(' expression3 ')'
-#               | '{' maybe-expression-list '}'
+# bitspec :== expression2  (+, -, *, / only)
+# bitspec-list :== bitspec | bitspec-list ',' bitspec
 
-def parse_operand(ts):
+# assignable :== identifier-chain
+#              | identifier-chain '[' maybe-expression-list ']'
+#              | identifier-chain '<' bitspec-list '>'
+#              | identifier-chain '[' maybe-expression-list ']'
+#                                 '<' bitspec-list '>'
+#              | '<' identifier-list '>'
+#              | identifier-chain '.' '<' identifier-list '>'
+#              | '(' assignable-list ')'
+#              | '-'
+# assignable-list :== assignable | assignable-list ',' assignable
+
+def parse_assignable(ts):
     t = ts.peek()
 
-    if isinstance(t, token.ReservedWord):
-        raise ParseError(ts)
-    elif isinstance(t, token.Identifier) or \
-         isinstance(t, token.LinkedIdentifier):
+    if isinstance(t, token.Identifier) or \
+       isinstance(t, token.LinkedIdentifier):
         chain = [ts.consume()]
         while ts.consume_if(token.PERIOD):
             t = ts.consume()
+            if t == token.LESS:
+                elements = []
+                while True:
+                    t = ts.consume()
+                    if not isinstance(t, token.Identifier) and \
+                       not isinstance(t, token.LinkedIdentifier):
+                        raise ParseError(ts)
+                    elements.append(chain + [t])
+                    if not ts.consume_if(token.COMMA):
+                        break
+                if ts.consume() != token.GREATER:
+                    raise ParseError(ts)
+                return Bits(elements)
             if not isinstance(t, token.Identifier) and \
                not isinstance(t, token.LinkedIdentifier):
                 raise ParseError(ts)
             chain.append(t)
         expression = expr.Identifier(chain)
-        if ts.consume_if(token.OPAREN):
-            if ts.peek() != token.CPAREN:
-                args = expr.parse_list(ts)
-            else:
-                args = []
-            if ts.consume() != token.CPAREN:
-                raise ParseError(ts)
-            expression = expr.Arguments(expression, '()', args)
-        elif ts.consume_if(token.OBRACKET):
+        if ts.consume_if(token.OBRACKET):
             if ts.peek() != token.CBRACKET:
                 args = expr.parse_list(ts)
             else:
@@ -104,7 +140,7 @@ def parse_operand(ts):
             if ts.consume() != token.CBRACKET:
                 raise ParseError(ts)
             expression = expr.Arguments(expression, '[]', args)
-        elif ts.consume_if(token.LESS):
+        if ts.consume_if(token.LESS):
             sub_ts = ts.fork()
             try:
                 args = []
@@ -119,16 +155,59 @@ def parse_operand(ts):
             else:
                 expression = expr.Arguments(expression, '<>', args)
                 ts.become(sub_ts)
-    elif isinstance(t, token.Number):
-        expression = expr.Numeric(t)
+        return expression
+
+    if ts.consume_if(token.LESS):
+        elements = []
+        while True:
+            t = ts.consume()
+            if not isinstance(t, token.Identifier) and \
+               not isinstance(t, token.LinkedIdentifier):
+                raise ParseError(ts)
+            elements.append([t])
+            if not ts.consume_if(token.COMMA):
+                break
+        if ts.consume() != token.GREATER:
+            raise ParseError(ts)
+        return Bits(elements)
+
+    if ts.consume_if(token.OPAREN):
+        members = []
+        while True:
+            members.append(expr.parse_assignable(ts))
+            if not ts.consume_if(token.COMMA):
+                break
+        if ts.consume() != token.CPAREN:
+            raise ParseError(ts)
+        return Values(members)
+
+    if ts.comsume_if(token.HYPHEN):
+        return Omitted()
+
+    raise ParseError(ts)
+
+
+# expression0 :== assignable
+#               | identifier-chain '(' maybe-expression-list ')'
+#               | number
+#               | bitvector
+#               | '(' expression3 ')'
+#               | '{' maybe-expression-list '}'
+
+def parse_operand(ts):
+    t = ts.peek()
+
+    if isinstance(t, token.Number):
         ts.consume()
+        return expr.Numeric(t)
     elif isinstance(t, token.Bitvector):
-        expression = expr.Numeric(t)
         ts.consume()
+        return expr.Numeric(t)
     elif ts.consume_if(token.OPAREN):
         expression = expr.parse_ternary(ts)
         if ts.consume() != token.CPAREN:
             raise ParseError(ts)
+        return expression
     elif ts.consume_if(token.OBRACE):
         if ts.peek() != token.CBRACE:
             members = expr.parse_list(ts)
@@ -136,11 +215,18 @@ def parse_operand(ts):
             members = []
         if ts.consume() != token.CBRACE:
             raise ParseError(ts)
-        expression = expr.Set(members)
+        return expr.Set(members)
     else:
-        raise ParseError(ts)
-
-    return expression
+        expression = parse_assignable(ts)
+        if ts.consume_if(token.OPAREN):
+            if ts.peek() != token.CPAREN:
+                args = expr.parse_list(ts)
+            else:
+                args = []
+            if ts.consume() != token.CPAREN:
+                raise ParseError(ts)
+            expression = expr.Arguments(expression, '()', args)
+        return expression
 
 
 # expression1 :== expression0

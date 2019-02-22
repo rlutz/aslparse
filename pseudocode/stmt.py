@@ -108,7 +108,7 @@ def parse_if_segment(ts):
 #             | 'for' identifier '=' expression2 'to' expression2 body
 #             | 'UNDEFINED' ';'
 #             | 'UNPREDICTABLE' ';'
-#             | expression0 '=' expression3 ';'
+#             | assignable '=' expression3 ';'
 #             | identifier-chain '(' maybe-expression-list ')' ';'
 
 def parse_statement(ts):
@@ -148,22 +148,11 @@ def parse_statement(ts):
         return stmt.Unpredictable()
 
 
-    t = ts.consume()
-    if not isinstance(t, token.Identifier) and \
-       not isinstance(t, token.LinkedIdentifier):
-        raise ParseError(ts)
-    chain = [t]
-
-    while ts.consume_if(token.PERIOD):
-        t = ts.consume()
-        if not isinstance(t, token.Identifier) and \
-           not isinstance(t, token.LinkedIdentifier):
-            raise ParseError(ts)
-        chain.append(t)
-
-    expression = expr.Identifier(chain)
+    lhs = expr.parse_assignable(ts)
 
     if ts.consume_if(token.OPAREN):
+        if not isinstance(lhs, expr.Identifier):
+            raise ParseError(ts)
         if ts.peek() != token.CPAREN:
             args = expr.parse_list(ts)
         else:
@@ -172,26 +161,13 @@ def parse_statement(ts):
             raise ParseError(ts)
         if ts.consume() != token.SEMICOLON:
             raise ParseError(ts)
-        return stmt.FunctionCall(expression, args)
-
-    # not a function call either? -> has to be an assignment
-
-    if ts.consume_if(token.OBRACKET):
-        if ts.peek() != token.CBRACKET:
-            args = expr.parse_list(ts)
-        else:
-            args = []
-        if ts.consume() != token.CBRACKET:
-            raise ParseError(ts)
-        expression = expr.Arguments(expression, '[]', args)
+        return stmt.FunctionCall(lhs, args)
 
     if ts.consume() != token.EQUALS:
         raise ParseError(ts)
-
-    lhs = expression
     expression = expr.parse_ternary(ts)
     if ts.consume() != token.SEMICOLON:
-        raise ParseError(ts)(ts)
+        raise ParseError(ts)
     return stmt.Assignment(lhs, expression)
 
 
