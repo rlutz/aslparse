@@ -115,6 +115,7 @@ for s in ['AND',
           'for',
           'if',
           'integer',
+          'return',
           'then',
           'to']:
     s = intern(s)

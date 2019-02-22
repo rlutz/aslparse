@@ -80,6 +80,16 @@ class Assert:
     def __print__(self, indent):
         print indent + 'assert ' + str(self.expression) + ';'
 
+class Return:
+    def __init__(self, value):
+        self.value = value
+
+    def __print__(self, indent):
+        if self.value is not None:
+            print indent + 'return ' + str(self.value) + ';'
+        else:
+            print indent + 'return;'
+
 
 # body :== statement | indented-block
 
@@ -117,6 +127,8 @@ def parse_if_segment(ts):
 #             | 'UNDEFINED' ';'
 #             | 'UNPREDICTABLE' ';'
 #             | 'assert' expression2 ';'
+#             | 'return' ';'
+#             | 'return' expression2 ';'
 #             | assignable '=' expression3 ';'
 #             | identifier-chain '(' maybe-expression-list ')' ';'
 
@@ -161,6 +173,15 @@ def parse_statement(ts):
         if ts.consume() != token.SEMICOLON:
             raise ParseError(ts)
         return stmt.Assert(expression)
+
+    if ts.consume_if(token.rw['return']):
+        if ts.peek() == token.SEMICOLON:
+            value = None
+        else:
+            value = expr.parse_binary(ts)
+        if ts.consume() != token.SEMICOLON:
+            raise ParseError(ts)
+        return stmt.Return(value)
 
 
     lhs = expr.parse_assignable(ts)
