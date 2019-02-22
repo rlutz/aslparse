@@ -93,7 +93,8 @@ class Fragment:
                 statement.__print__('')
             print
           else:
-            expression = tstream.parse(tokens, 0, len(tokens), expr.parse3)
+            expression = tstream.parse(tokens, 0, len(tokens),
+                                       expr.parse_ternary)
             print
             print str(expression)
             print

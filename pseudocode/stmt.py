@@ -88,7 +88,7 @@ def parse_body(ts):
 #              | expression2 'then' body 'else' body
 
 def parse_if_segment(ts):
-    expression = expr.parse2(ts)
+    expression = expr.parse_binary(ts)
     if ts.consume() != token.rw['then']:
         raise ParseError(ts)
 
@@ -122,10 +122,10 @@ def parse_statement(ts):
             raise ParseError(ts)
         if ts.consume() != token.EQUALS:
             raise ParseError(ts)
-        start = expr.parse2(ts)
+        start = expr.parse_binary(ts)
         if ts.consume() != token.rw['to']:
             raise ParseError(ts)
-        stop = expr.parse2(ts)
+        stop = expr.parse_binary(ts)
         body = stmt.parse_body(ts)
         return stmt.For(var, start, stop, body)
 
@@ -189,7 +189,7 @@ def parse_statement(ts):
         raise ParseError(ts)
 
     lhs = expression
-    expression = expr.parse3(ts)
+    expression = expr.parse_ternary(ts)
     if ts.consume() != token.SEMICOLON:
         raise ParseError(ts)(ts)
     return stmt.Assignment(lhs, expression)

@@ -73,7 +73,7 @@ class Ternary:
 #               | '(' expression3 ')'
 #               | '{' maybe-expression-list '}'
 
-def parse0(ts):
+def parse_operand(ts):
     t = ts.peek()
 
     if isinstance(t, token.ReservedWord):
@@ -109,7 +109,7 @@ def parse0(ts):
             try:
                 args = []
                 while True:
-                    args.append(expr.parse2(sub_ts, len(operators) - 2))
+                    args.append(expr.parse_binary(sub_ts, len(operators) - 2))
                     if not sub_ts.consume_if(token.COMMA):
                         break
                 if sub_ts.consume() != token.GREATER:
@@ -126,7 +126,7 @@ def parse0(ts):
         expression = expr.Numeric(t)
         ts.consume()
     elif ts.consume_if(token.OPAREN):
-        expression = expr.parse3(ts)
+        expression = expr.parse_ternary(ts)
         if ts.consume() != token.CPAREN:
             raise ParseError(ts)
     elif ts.consume_if(token.OBRACE):
@@ -146,12 +146,14 @@ def parse0(ts):
 # expression1 :== expression0
 #               | '!' expression1
 
-def parse1(ts):
+# Potentially: '~', '-', type casts
+
+def parse_unary(ts):
     if ts.consume_if(token.EXCLAMATION_MARK):
-        expression = expr.parse1(ts)
+        expression = expr.parse_unary(ts)
         return expr.Unary(expression, token.EXCLAMATION_MARK)
 
-    return expr.parse0(ts)
+    return expr.parse_operand(ts)
 
 
 # operator :== '+' | '-' | '*' | '/' | '==' | '!=' | '<' | '>'
@@ -172,14 +174,14 @@ operators = [
     [token.ASTERISK, token.SLASH],
 ]
 
-def parse2(ts, precedence = 0):
+def parse_binary(ts, precedence_limit = 0):
     stack = []
 
     while True:
         while len(stack) < len(operators):
             stack.append(None)
 
-        expression = expr.parse1(ts)
+        expression = expr.parse_unary(ts)
 
         while True:
             expr_op = stack.pop()
@@ -189,7 +191,7 @@ def parse2(ts, precedence = 0):
             if ts.maybe_peek() in operators[len(stack)]:
                 break
 
-            if len(stack) == precedence:
+            if len(stack) == precedence_limit:
                 return expression
 
         stack.append((expression, ts.consume()))
@@ -199,18 +201,18 @@ def parse2(ts, precedence = 0):
 # expression3 :== expression2
 #               | 'if' expression2 'then' expression2 'else' expression2
 
-def parse3(ts):
+def parse_ternary(ts):
     if ts.consume_if(token.rw['if']):
-        condition = expr.parse2(ts)
+        condition = expr.parse_binary(ts)
         if ts.consume() != token.rw['then']:
             raise ParseError(ts)
-        arg0 = expr.parse2(ts)
+        arg0 = expr.parse_binary(ts)
         if ts.consume() != token.rw['else']:
             raise ParseError(ts)
-        arg1 = expr.parse2(ts)
+        arg1 = expr.parse_binary(ts)
         return expr.Ternary(condition, arg0, arg1)
 
-    return expr.parse2(ts)
+    return expr.parse_binary(ts)
 
 
 # expression-list :== expression3
@@ -219,7 +221,7 @@ def parse3(ts):
 def parse_list(ts):
     expressions = []
     while True:
-        expression = expr.parse3(ts)
+        expression = expr.parse_ternary(ts)
         expressions.append(expression)
         if not ts.consume_if(token.COMMA):
             break
