@@ -286,7 +286,7 @@ def parse_unary(ts):
     return expr.parse_operand(ts)
 
 
-# operator :== '+' | '-' | '*' | '/' | '==' | '!=' | '<' | '>'
+# operator :== '+' | '-' | '*' | '/' | 'DIV' | 'MOD' | '==' | '!=' | '<' | '>'
 #            | '&&' | '||' | 'AND' | 'OR' | 'EOR' | ':' | 'IN'
 
 # expression2 :== expression1
@@ -303,7 +303,7 @@ operators = [
     [token.LESS, token.GREATER],
     [token.COLON],
     [token.PLUS, token.HYPHEN],
-    [token.ASTERISK, token.SLASH],
+    [token.ASTERISK, token.SLASH, token.rw['DIV'], token.rw['MOD']],
 ]
 
 def parse_binary(ts, precedence_limit = 0):

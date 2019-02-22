@@ -98,9 +98,11 @@ def intern_token(name, t):
 rw = {}
 
 for s in ['AND',
+          'DIV',
           'EOR',
           'IMPLEMENTATION_DEFINED',
           'IN',
+          'MOD',
           'OR',
           'SEE',
           'UNDEFINED',
