@@ -29,15 +29,16 @@ def parse(ts):
     if ts.consume() != token.OPAREN:
         raise ParseError(ts)
     parameters = []
-    while True:
-        param_type = dtype.parse(ts)
-        t = ts.consume()
-        if not isinstance(t, token.Identifier) and \
-           not isinstance(t, token.LinkedIdentifier):
-            raise ParseError(ts)
-        parameters.append((param_type, t))
-        if not ts.consume_if(token.COMMA):
-            break
+    if ts.peek() != token.CPAREN:
+        while True:
+            param_type = dtype.parse(ts)
+            t = ts.consume()
+            if not isinstance(t, token.Identifier) and \
+               not isinstance(t, token.LinkedIdentifier):
+                raise ParseError(ts)
+            parameters.append((param_type, t))
+            if not ts.consume_if(token.COMMA):
+                break
     if ts.consume() != token.CPAREN:
         raise ParseError(ts)
     body = stmt.parse_body(ts)
