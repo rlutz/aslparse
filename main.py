@@ -38,12 +38,12 @@ class Fragment:
 
         self.tokenizer = token.Tokenizer()
         self.buf = []
-        self.inside_a = False
+        self.inside_element = None
 
     def character_data(self, data):
         self.buf.append(data)
 
-    def start_element_a(self, link, file, hover):
+    def start_element(self, name, link, hover, file = None):
         if self.buf:
             try:
                 self.tokenizer.process(''.join(self.buf))
@@ -52,18 +52,22 @@ class Fragment:
                 sys.exit(1)
             del self.buf[:]
 
-        if self.inside_a:
-            log.error('a tag inside another a tag in pstext tag')
-            return
-        self.inside_a = True
-        #print link, file, hover
+        if name != 'a' and name != 'anchor':
+            raise ParseError
+        if self.inside_element is not None:
+            log.error('%s tag inside %s tag in pstext tag'
+                        % (name, self.inside_element))
+        self.inside_element = name
 
-    def end_element_a(self):
-        assert self.inside_a
-        self.inside_a = False
+    def end_element(self, name):
+        assert self.inside_element == name
+        self.inside_element = None
 
         try:
-            self.tokenizer.process_a(''.join(self.buf))
+            if name == 'a':
+                self.tokenizer.process_a(''.join(self.buf))
+            elif name == 'anchor':
+                self.tokenizer.process_anchor(''.join(self.buf))
         except LexError as e:
             e.report()
             sys.exit(1)
@@ -146,9 +150,9 @@ def main():
                     log.error('multiple pstext tags inside ps tag')
                 container.fragment = fragment
         elif fragment is not None:
-            if name != 'a':
+            if name != 'a' and name != 'anchor':
                 raise ParseError
-            fragment.start_element_a(**attributes)
+            fragment.start_element(name, **attributes)
 
     def EndElementHandler(name):
         global container, fragment
@@ -163,9 +167,7 @@ def main():
             fragment.end()
             fragment = None
         elif fragment is not None:
-            if name != 'a':
-                raise ParseError
-            fragment.end_element_a()
+            fragment.end_element(name)
 
     def ProcessingInstructionHandler(target, data):
         #print 'ProcessingInstruction', repr(target), repr(data)

@@ -61,6 +61,13 @@ class LinkedIdentifier:
     def __str__(self):
         return 'a:' + self.name
 
+class DeclarationIdentifier:
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return 'decl:' + self.name
+
 class Number:
     def __init__(self, name):
         self.name = name
@@ -310,6 +317,17 @@ class Tokenizer:
                       or ch == '_' or i > 0 and ch >= '0' and ch <= '9'):
                 raise LexError(data, pos)
         self.tokens.append(token.intern_token(data, token.LinkedIdentifier))
+
+    def process_anchor(self, data):
+        if not data:
+            raise LexError(data, pos)
+        for i, ch in enumerate(data):
+            if not (ch >= 'A' and ch <= 'Z' or ch >= 'a' and ch <= 'z'
+                      or ch == '_' or i > 0 and (ch >= '0' and ch <= '9'
+                                                   or ch == '.')):
+                raise LexError(data, pos)
+        self.tokens.append(token.intern_token(
+            data, token.DeclarationIdentifier))
 
     def process_end(self):
         while self.stack:
