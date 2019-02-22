@@ -107,21 +107,48 @@ class ImplementationDefined:
         return str(self.datatype) + \
             ' IMPLEMENTATION_DEFINED "%s"' % self.aspect
 
+
+# bitspec :== expression2                  (+, -, *, / only)
+#           | expression2 ':' expression2  (+, -, *, / only)
+# bitspec-list :== bitspec | bitspec-list ',' bitspec
+# bitspec-clause :== '<' bitspec-list '>'
+
+def parse_bitspec_clause(ts):
+    if not ts.consume_if(token.LESS):
+        return None
+
+    sub_ts = ts.fork()
+    args = []
+    try:
+        while True:
+            arg = expr.parse_binary(sub_ts, len(operators) - 2)
+            if sub_ts.consume_if(token.COLON):
+                arg1 = expr.parse_binary(sub_ts, len(operators) - 2)
+                args.append((arg, arg1))
+            else:
+                args.append(arg)
+            if not sub_ts.consume_if(token.COMMA):
+                break
+        if sub_ts.consume() != token.GREATER:
+            raise ParseError(sub_ts)
+    except ParseError as e:
+        ts.abandon(sub_ts)
+        return None
+    else:
+        ts.become(sub_ts)
+        return args
+
+
 # identifier :== unlinked-identifier | linked-identifier
 # identifier-chain :== identifier | identifier-chain '.' identifier
 # identifier-list :== identifier | identifier-list ',' identifier
 
 # maybe-expression-list :== <empty> | expression-list
 
-# bitspec :== expression2                  (+, -, *, / only)
-#           | expression2 ':' expression2  (+, -, *, / only)
-# bitspec-list :== bitspec | bitspec-list ',' bitspec
-
 # assignable :== identifier-chain
 #              | identifier-chain '[' maybe-expression-list ']'
-#              | identifier-chain '<' bitspec-list '>'
-#              | identifier-chain '[' maybe-expression-list ']'
-#                                 '<' bitspec-list '>'
+#              | identifier-chain bitspec-clause
+#              | identifier-chain '[' maybe-expression-list ']' bitspec-clause
 #              | '<' identifier-list '>'
 #              | identifier-chain '.' '<' identifier-list '>'
 #              | '(' assignable-list ')'
@@ -162,26 +189,10 @@ def parse_assignable(ts):
             if ts.consume() != token.CBRACKET:
                 raise ParseError(ts)
             expression = expr.Arguments(expression, '[]', args)
-        if ts.consume_if(token.LESS):
-            sub_ts = ts.fork()
-            try:
-                args = []
-                while True:
-                    arg = expr.parse_binary(sub_ts, len(operators) - 2)
-                    if sub_ts.consume_if(token.COLON):
-                        arg1 = expr.parse_binary(sub_ts, len(operators) - 2)
-                        args.append((arg, arg1))
-                    else:
-                        args.append(arg)
-                    if not sub_ts.consume_if(token.COMMA):
-                        break
-                if sub_ts.consume() != token.GREATER:
-                    raise ParseError(sub_ts)
-            except ParseError as e:
-                ts.abandon(sub_ts)
-            else:
+        if ts.peek() == token.LESS:
+            args = expr.parse_bitspec_clause(ts)
+            if args is not None:
                 expression = expr.Arguments(expression, '<>', args)
-                ts.become(sub_ts)
         return expression
 
     if ts.consume_if(token.LESS):
@@ -216,6 +227,7 @@ def parse_assignable(ts):
 
 # expression0 :== assignable
 #               | identifier-chain '(' maybe-expression-list ')'
+#               | identifier-chain '(' maybe-expression-list ')' bitspec-clause
 #               | number
 #               | bitvector
 #               | '(' expression-list ')'
@@ -270,6 +282,10 @@ def parse_operand(ts):
             if ts.consume() != token.CPAREN:
                 raise ParseError(ts)
             expression = expr.Arguments(expression, '()', args)
+        if ts.peek() == token.LESS:
+            args = expr.parse_bitspec_clause(ts)
+            if args is not None:
+                expression = expr.Arguments(expression, '<>', args)
         return expression
 
 
