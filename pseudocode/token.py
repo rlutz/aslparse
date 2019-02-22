@@ -75,6 +75,13 @@ class Bitvector:
     def __str__(self):
         return 'bv:' + self.name
 
+class String:
+    def __init__(self, data):
+        self.data = data
+
+    def __str__(self):
+        return 'str:"' + self.data + '"'
+
 
 def intern_token(name, t):
     try:
@@ -153,7 +160,17 @@ class Tokenizer:
                     self.tokens.append(token.EXCLAMATION_MARK)
                     pos += 1
             elif ch == '"':
-                raise LexError(data, pos)
+                try:
+                    n = data.index('"', pos + 1) - pos - 1
+                except ValueError:
+                    raise LexError(data, pos)
+                if data.find('\n', pos + 1, pos + 1 + n) != -1:
+                    raise LexError(data, pos)
+                if data.find('\\', pos + 1, pos + 1 + n) != -1:
+                    raise LexError(data, pos)
+                self.tokens.append(token.intern_token(
+                    data[pos + 1:pos + 1 + n], token.String))
+                pos += n + 2
             elif ch == '#':
                 raise LexError(data, pos)
             elif ch == '$':
