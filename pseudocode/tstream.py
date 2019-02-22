@@ -4,6 +4,7 @@ class TokenStream:
         self.pos = start
         self.stop = stop
         assert stop >= start
+        self.forks = set()
 
     def consume(self):
         if self.pos == self.stop:
@@ -30,9 +31,23 @@ class TokenStream:
             return None
         return self.tokens[self.pos]
 
+    def fork(self):
+        sub_ts = TokenStream(self.tokens, self.pos, self.stop)
+        self.forks.add(sub_ts)
+        return sub_ts
+
+    def abandon(self, sub_ts):
+        self.forks.remove(sub_ts)
+
+    def become(self, sub_ts):
+        self.pos = sub_ts.pos
+        self.forks.remove(sub_ts)
+
 def parse(tokens, start, stop, parse_func):
     ts = TokenStream(tokens, start, stop)
     result = parse_func(ts)
     if ts.pos != stop:
+        raise ParseError
+    if ts.forks:
         raise ParseError
     return result

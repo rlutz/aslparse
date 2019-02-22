@@ -104,6 +104,21 @@ def parse0(ts):
             if ts.consume() != token.CBRACKET:
                 raise ParseError(ts)
             expression = expr.Arguments(expression, '[]', args)
+        elif ts.consume_if(token.LESS):
+            sub_ts = ts.fork()
+            try:
+                args = []
+                while True:
+                    args.append(expr.parse2(sub_ts, len(operators) - 2))
+                    if not sub_ts.consume_if(token.COMMA):
+                        break
+                if sub_ts.consume() != token.GREATER:
+                    raise ParseError(sub_ts)
+            except ParseError as e:
+                ts.abandon(sub_ts)
+            else:
+                expression = expr.Arguments(expression, '<>', args)
+                ts.become(sub_ts)
     elif isinstance(t, token.Number):
         expression = expr.Numeric(t)
         ts.consume()
@@ -146,44 +161,39 @@ def parse1(ts):
 #               | expression1 operator expression1
 
 operators = [
-    token.ASTERISK,
-    token.PLUS,
-    token.HYPHEN,
-    token.SLASH,
-    token.LESS,
-    token.DOUBLE_EQUALS,
-    token.EXCLAMATION_EQUALS,
-    token.GREATER,
-    token.DOUBLE_AMPERSAND,
-    token.DOUBLE_VBAR,
-    token.COLON,
-    token.rw['IN'],
-    token.rw['EOR']
+    [token.DOUBLE_VBAR],
+    [token.DOUBLE_AMPERSAND],
+    [token.rw['IN']],
+    [token.rw['EOR']],
+    [token.DOUBLE_EQUALS, token.EXCLAMATION_EQUALS],
+    [token.LESS, token.GREATER],
+    [token.COLON],
+    [token.PLUS, token.HYPHEN],
+    [token.ASTERISK, token.SLASH],
 ]
 
-def parse2(ts):
-    expression = expr.parse1(ts)
+def parse2(ts, precedence = 0):
+    stack = []
 
     while True:
-        if not ts.maybe_peek() in operators:
-            break
-        operator = ts.consume()
+        while len(stack) < len(operators):
+            stack.append(None)
 
-        next_expr = expr.parse1(ts)
+        expression = expr.parse1(ts)
 
-        if operator == token.LESS and (ts.maybe_peek() == token.GREATER or
-                                     ts.maybe_peek() == token.COMMA):
-            if ts.consume() == token.GREATER:
-                args = []
-            else:
-                args = expr.parse_list(ts)
-                if ts.consume() != token.GREATER:
-                    raise ParseError(ts)
-            expression = expr.Arguments(expression, '<>', [next_expr] + args)
-        else:
-            expression = expr.Operator(expression, next_expr, operator)
+        while True:
+            expr_op = stack.pop()
+            if expr_op is not None:
+                expression = expr.Operator(expr_op[0], expression, expr_op[1])
 
-    return expression
+            if ts.maybe_peek() in operators[len(stack)]:
+                break
+
+            if len(stack) == precedence:
+                return expression
+
+        stack.append((expression, ts.consume()))
+        del expression
 
 
 # expression3 :== expression2
