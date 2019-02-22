@@ -1,4 +1,5 @@
 import token, expr
+from . import ParseError
 
 class Identifier:
     def __init__(self, chain):
@@ -76,7 +77,7 @@ def parse0(ts):
     t = ts.peek()
 
     if isinstance(t, token.ReservedWord):
-        raise ParseError
+        raise ParseError(ts)
     elif isinstance(t, token.Identifier) or \
          isinstance(t, token.LinkedIdentifier):
         chain = [ts.consume()]
@@ -84,7 +85,7 @@ def parse0(ts):
             t = ts.consume()
             if not isinstance(t, token.Identifier) and \
                not isinstance(t, token.LinkedIdentifier):
-                raise ParseError
+                raise ParseError(ts)
             chain.append(t)
         expression = expr.Identifier(chain)
         if ts.consume_if(token.OPAREN):
@@ -93,7 +94,7 @@ def parse0(ts):
             else:
                 args = []
             if ts.consume() != token.CPAREN:
-                raise ParseError
+                raise ParseError(ts)
             expression = expr.Arguments(expression, '()', args)
         elif ts.consume_if(token.OBRACKET):
             if ts.peek() != token.CBRACKET:
@@ -101,7 +102,7 @@ def parse0(ts):
             else:
                 args = []
             if ts.consume() != token.CBRACKET:
-                raise ParseError
+                raise ParseError(ts)
             expression = expr.Arguments(expression, '[]', args)
     elif isinstance(t, token.Number):
         expression = expr.Numeric(t)
@@ -112,17 +113,17 @@ def parse0(ts):
     elif ts.consume_if(token.OPAREN):
         expression = expr.parse3(ts)
         if ts.consume() != token.CPAREN:
-            raise ParseError
+            raise ParseError(ts)
     elif ts.consume_if(token.OBRACE):
         if ts.peek() != token.CBRACE:
             members = expr.parse_list(ts)
         else:
             members = []
         if ts.consume() != token.CBRACE:
-            raise ParseError
+            raise ParseError(ts)
         expression = expr.Set(members)
     else:
-        raise ParseError
+        raise ParseError(ts)
 
     return expression
 
@@ -177,7 +178,7 @@ def parse2(ts):
             else:
                 args = expr.parse_list(ts)
                 if ts.consume() != token.GREATER:
-                    raise ParseError
+                    raise ParseError(ts)
             expression = expr.Arguments(expression, '<>', [next_expr] + args)
         else:
             expression = expr.Operator(expression, next_expr, operator)
@@ -192,10 +193,10 @@ def parse3(ts):
     if ts.consume_if(token.rw['if']):
         condition = expr.parse2(ts)
         if ts.consume() != token.rw['then']:
-            raise ParseError
+            raise ParseError(ts)
         arg0 = expr.parse2(ts)
         if ts.consume() != token.rw['else']:
-            raise ParseError
+            raise ParseError(ts)
         arg1 = expr.parse2(ts)
         return expr.Ternary(condition, arg0, arg1)
 

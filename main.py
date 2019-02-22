@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-import os, sys, xml.parsers.expat, traceback
+import sys, xml.parsers.expat
 from pseudocode import *
-from pseudocode import ParseError
+from pseudocode import LexError, ParseError
 
 class Log:
     def __init__(self):
@@ -45,7 +45,11 @@ class Fragment:
 
     def start_element_a(self, link, file, hover):
         if self.buf:
-            self.tokenizer.process(''.join(self.buf))
+            try:
+                self.tokenizer.process(''.join(self.buf))
+            except LexError as e:
+                e.report()
+                sys.exit(1)
             del self.buf[:]
 
         if self.inside_a:
@@ -56,13 +60,22 @@ class Fragment:
 
     def end_element_a(self):
         assert self.inside_a
-        self.tokenizer.process_a(''.join(self.buf))
-        del self.buf[:]
         self.inside_a = False
+
+        try:
+            self.tokenizer.process_a(''.join(self.buf))
+        except LexError as e:
+            e.report()
+            sys.exit(1)
+        del self.buf[:]
 
     def end(self):
         if self.buf:
-            self.tokenizer.process(''.join(self.buf))
+            try:
+                self.tokenizer.process(''.join(self.buf))
+            except LexError as e:
+                e.report()
+                sys.exit(1)
             del self.buf[:]
         self.tokenizer.process_end()
 
@@ -86,20 +99,7 @@ class Fragment:
             print str(expression)
             print
         except ParseError as e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            #print 'Traceback (most recent call last):'
-            #traceback.print_tb(exc_traceback)
-            cwd = os.getcwd()
-            if not cwd.endswith('/'):
-                cwd = cwd + '/'
-            for fn, lineno, func, text in traceback.extract_tb(exc_traceback):
-                if fn.startswith(cwd):
-                    fn = fn[len(cwd):]
-                print '%-26s%-18s%s' % ('%s:%s' % (fn, lineno), func, text[:36])
-            del exc_traceback  # avoid circular reference
-
-            print
-            print ' '.join(str(t) for t in e.ts.tokens)
+            e.report()
             sys.exit(1)
 
 

@@ -1,4 +1,5 @@
 import token
+from . import LexError
 
 # '\t', '\n', '\r', ' ': whitespace
 EXCLAMATION_MARK = intern('!')
@@ -134,7 +135,7 @@ class Tokenizer:
                     indent += 1
                 pos += 1 + indent * 4
                 if data.startswith(' ', pos):
-                    raise ParseError
+                    raise LexError(data, pos)
                 while len(self.stack) < indent:
                     self.stack.append(self.tokens)
                     indented_tokens = []
@@ -152,13 +153,13 @@ class Tokenizer:
                     self.tokens.append(token.EXCLAMATION_MARK)
                     pos += 1
             elif ch == '"':
-                raise ParseError
+                raise LexError(data, pos)
             elif ch == '#':
-                raise ParseError
+                raise LexError(data, pos)
             elif ch == '$':
-                raise ParseError
+                raise LexError(data, pos)
             elif ch == '%':
-                raise ParseError
+                raise LexError(data, pos)
             elif ch == '&':
                 if pos + 1 < len(data) and data[pos + 1] == '&':
                     self.tokens.append(token.DOUBLE_AMPERSAND)
@@ -170,7 +171,7 @@ class Tokenizer:
                 try:
                     n = data.index('\'', pos + 1) - pos - 1
                 except ValueError:
-                    raise ParseError
+                    raise LexError(data, pos)
                 name = data[pos + 1:pos + 1 + n]
                 self.tokens.append(token.intern_token(name, token.Bitvector))
                 pos += n + 2
@@ -200,7 +201,7 @@ class Tokenizer:
                     try:
                         pos = data.index('\n', pos)
                     except ValueError:
-                        raise ParseError
+                        raise LexError(data, pos)
                 else:
                     self.tokens.append(token.SLASH)
                     pos += 1
@@ -234,21 +235,21 @@ class Tokenizer:
                 self.tokens.append(token.GREATER)
                 pos += 1
             elif ch == '?':
-                raise ParseError
+                raise LexError(data, pos)
             elif ch == '@':
-                raise ParseError
+                raise LexError(data, pos)
             elif ch == '[':
                 self.tokens.append(token.OBRACKET)
                 pos += 1
             elif ch == '\\':
-                raise ParseError
+                raise LexError(data, pos)
             elif ch == ']':
                 self.tokens.append(token.CBRACKET)
                 pos += 1
             elif ch == '^':
-                raise ParseError
+                raise LexError(data, pos)
             elif ch == '`':
-                raise ParseError
+                raise LexError(data, pos)
             elif ch == '{':
                 self.tokens.append(token.OBRACE)
                 pos += 1
@@ -263,20 +264,20 @@ class Tokenizer:
                 self.tokens.append(token.CBRACE)
                 pos += 1
             elif ch == '~':
-                raise ParseError
+                raise LexError(data, pos)
             else:
-                raise ParseError
+                raise LexError(data, pos)
 
 
         #print 'Character data: ', repr(data)
 
     def process_a(self, data):
         if not data:
-            raise ParseError
+            raise LexError(data, pos)
         for i, ch in enumerate(data):
             if not (ch >= 'A' and ch <= 'Z' or ch >= 'a' and ch <= 'z'
                       or ch == '_' or i > 0 and ch >= '0' and ch <= '9'):
-                raise ParseError
+                raise LexError(data, pos)
         self.tokens.append(token.intern_token(data, token.LinkedIdentifier))
 
     def process_end(self):

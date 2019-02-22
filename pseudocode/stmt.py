@@ -83,7 +83,7 @@ def parse_body(ts):
 def parse_if_segment(ts):
     expression = expr.parse2(ts)
     if ts.consume() != token.rw['then']:
-        raise ParseError
+        raise ParseError(ts)
 
     then_body = stmt.parse_body(ts)
 
@@ -112,38 +112,38 @@ def parse_statement(ts):
         var = ts.consume()
         if not isinstance(var, token.Identifier) and \
            not isinstance(var, token.LinkedIdentifier):
-            raise ParseError
+            raise ParseError(ts)
         if ts.consume() != token.EQUALS:
-            raise ParseError
+            raise ParseError(ts)
         start = expr.parse2(ts)
         if ts.consume() != token.rw['to']:
-            raise ParseError
+            raise ParseError(ts)
         stop = expr.parse2(ts)
         body = stmt.parse_body(ts)
         return stmt.For(var, start, stop, body)
 
     if ts.consume_if(token.rw['UNDEFINED']):
         if ts.consume() != token.SEMICOLON:
-            raise ParseError
+            raise ParseError(ts)
         return stmt.Undefined()
 
     if ts.consume_if(token.rw['UNPREDICTABLE']):
         if ts.consume() != token.SEMICOLON:
-            raise ParseError
+            raise ParseError(ts)
         return stmt.Unpredictable()
 
 
     t = ts.consume()
     if not isinstance(t, token.Identifier) and \
        not isinstance(t, token.LinkedIdentifier):
-        raise ParseError
+        raise ParseError(ts)
     chain = [t]
 
     while ts.consume_if(token.PERIOD):
         t = ts.consume()
         if not isinstance(t, token.Identifier) and \
            not isinstance(t, token.LinkedIdentifier):
-            raise ParseError
+            raise ParseError(ts)
         chain.append(t)
 
     expression = expr.Identifier(chain)
@@ -154,9 +154,9 @@ def parse_statement(ts):
         else:
             args = []
         if ts.consume() != token.CPAREN:
-            raise ParseError
+            raise ParseError(ts)
         if ts.consume() != token.SEMICOLON:
-            raise ParseError
+            raise ParseError(ts)
         return stmt.FunctionCall(expression, args)
 
     # not a function call either? -> has to be an assignment
@@ -167,16 +167,16 @@ def parse_statement(ts):
         else:
             args = []
         if ts.consume() != token.CBRACKET:
-            raise ParseError
+            raise ParseError(ts)
         expression = expr.Arguments(expression, '[]', args)
 
     if ts.consume() != token.EQUALS:
-        raise ParseError
+        raise ParseError(ts)
 
     lhs = expression
     expression = expr.parse3(ts)
     if ts.consume() != token.SEMICOLON:
-        raise ParseError(ts)
+        raise ParseError(ts)(ts)
     return stmt.Assignment(lhs, expression)
 
 
@@ -199,7 +199,7 @@ def parse_block(tokens):
                 if t != token.rw['elsif'] and t != token.rw['else']:
                     break
             if pos == len(tokens):
-                raise ParseError
+                raise ParseError(None)
 
         statements.append(tstream.parse(
             tokens, start, pos, stmt.parse_statement))
