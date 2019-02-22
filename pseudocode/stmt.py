@@ -106,6 +106,7 @@ def parse_if_segment(ts):
 
 # statement :== 'if' if-segment
 #             | 'for' identifier '=' expression2 'to' expression2 body
+#             | 'SEE' string ';'
 #             | 'UNDEFINED' ';'
 #             | 'UNPREDICTABLE' ';'
 #             | assignable '=' expression3 ';'
