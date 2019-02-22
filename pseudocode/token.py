@@ -158,6 +158,8 @@ class Tokenizer:
                 self.tokens.append(t)
                 pos += n
             elif ch == '\n':
+                while pos + 1 < len(data) and data[pos + 1] == '\n':
+                    pos += 1
                 indent = 0
                 while data.startswith('    ', pos + 1 + indent * 4):
                     indent += 1
