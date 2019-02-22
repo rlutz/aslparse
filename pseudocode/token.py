@@ -136,6 +136,7 @@ class Tokenizer:
     def __init__(self):
         self.tokens = []
         self.stack = []
+        self.parentheses = []
 
     def process(self, data):
         pos = 0
@@ -158,6 +159,9 @@ class Tokenizer:
                 self.tokens.append(t)
                 pos += n
             elif ch == '\n':
+                if self.parentheses:
+                    pos += 1
+                    continue
                 while pos + 1 < len(data) and data[pos + 1] == '\n':
                     pos += 1
                 indent = 0
@@ -217,8 +221,11 @@ class Tokenizer:
                 pos += n + 2
             elif ch == '(':
                 self.tokens.append(token.OPAREN)
+                self.parentheses.append('()')
                 pos += 1
             elif ch == ')':
+                if not self.parentheses or self.parentheses.pop() != '()':
+                    raise LexError(data, pos)
                 self.tokens.append(token.CPAREN)
                 pos += 1
             elif ch == '*':
@@ -280,10 +287,13 @@ class Tokenizer:
                 raise LexError(data, pos)
             elif ch == '[':
                 self.tokens.append(token.OBRACKET)
+                self.parentheses.append('[]')
                 pos += 1
             elif ch == '\\':
                 raise LexError(data, pos)
             elif ch == ']':
+                if not self.parentheses or self.parentheses.pop() != '[]':
+                    raise LexError(data, pos)
                 self.tokens.append(token.CBRACKET)
                 pos += 1
             elif ch == '^':
