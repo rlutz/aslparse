@@ -21,10 +21,12 @@ SLASH = intern('/')
 COLON = intern(':')
 SEMICOLON = intern(';')
 LESS = intern('<')
+LESS_EQUALS = intern('<=')
 EQUALS = intern('=')
 DOUBLE_EQUALS = intern('==')
 EXCLAMATION_EQUALS = intern('!=')
 GREATER = intern('>')
+GREATER_EQUALS = intern('>=')
 #QUESTION_MARK = intern('?')
 #AT = intern('@')
 OBRACKET = intern('[')
@@ -269,8 +271,12 @@ class Tokenizer:
                 self.tokens.append(token.SEMICOLON)
                 pos += 1
             elif ch == '<':
-                self.tokens.append(token.LESS)
-                pos += 1
+                if pos + 1 < len(data) and data[pos + 1] == '=':
+                    self.tokens.append(token.LESS_EQUALS)
+                    pos += 2
+                else:
+                    self.tokens.append(token.LESS)
+                    pos += 1
             elif ch == '=':
                 if pos + 1 < len(data) and data[pos + 1] == '=':
                     self.tokens.append(token.DOUBLE_EQUALS)
@@ -279,8 +285,12 @@ class Tokenizer:
                     self.tokens.append(token.EQUALS)
                     pos += 1
             elif ch == '>':
-                self.tokens.append(token.GREATER)
-                pos += 1
+                if pos + 1 < len(data) and data[pos + 1] == '=':
+                    self.tokens.append(token.GREATER_EQUALS)
+                    pos += 2
+                else:
+                    self.tokens.append(token.GREATER)
+                    pos += 1
             elif ch == '?':
                 raise LexError(data, pos)
             elif ch == '@':

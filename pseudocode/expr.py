@@ -316,7 +316,7 @@ operators = [
     [token.rw['EOR']],
     [token.rw['AND']],
     [token.DOUBLE_EQUALS, token.EXCLAMATION_EQUALS],
-    [token.LESS, token.GREATER],
+    [token.LESS, token.LESS_EQUALS, token.GREATER, token.GREATER_EQUALS],
     [token.COLON],
     [token.PLUS, token.HYPHEN],
     [token.ASTERISK, token.SLASH, token.rw['DIV'], token.rw['MOD']],
