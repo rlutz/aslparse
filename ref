@@ -1,0 +1,31 @@
+
+id:n = a:UInt(id:Rn);
+id:registers = id:register_list;
+id:increment = id:U == bv:1;
+id:wordhigher = id:P == id:U;
+if id:n == num:15 || a:BitCount(id:registers) < num:1 then
+    UNPREDICTABLE;
+
+
+id:BitCount(id:registers) < num:1
+
+
+if a:ConditionPassed() then
+    id:EncodingSpecificOperations();
+    if id:PSTATE.id:EL == a:EL2 then
+        UNDEFINED;
+    elsif id:PSTATE.id:M rw:IN {a:M32_User, a:M32_System} then
+        UNPREDICTABLE;
+    else
+        id:length = num:4 * a:BitCount(id:registers);
+        id:address = id:increment ? a:R[id:n] : a:R[id:n] - id:length;
+        if id:wordhigher then
+            id:address = id:address + num:4;
+        for id:i = num:0 to num:14
+            if id:registers<id:i> == bv:1 then
+                a:Rmode[id:i, a:M32_User] = a:MemA[id:address, num:4];
+                id:address = id:address + num:4;
+
+
+id:PSTATE.id:M rw:IN {id:M32_User, id:M32_System}
+
