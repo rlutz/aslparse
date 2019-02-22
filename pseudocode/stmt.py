@@ -105,7 +105,7 @@ class Return:
 
 def parse_body(ts):
     if isinstance(ts.peek(), list):
-        return stmt.parse_block(ts.consume())
+        return stmt.parse_block(ts.consume(), stmt.parse_statement)
 
     return [stmt.parse_statement(ts)]
 
@@ -232,7 +232,7 @@ def parse_statement(ts):
 # statements :== <empty> | statement statements
 # indented-block :== BEGIN statements END
 
-def parse_block(tokens):
+def parse_block(tokens, parse_func):
     statements = []
     start = 0
     while start < len(tokens):
@@ -249,8 +249,7 @@ def parse_block(tokens):
             if pos == len(tokens):
                 raise ParseError(None)
 
-        statements.append(tstream.parse(
-            tokens, start, pos, stmt.parse_statement))
+        statements.append(tstream.parse(tokens, start, pos, parse_func))
         start = pos
 
     return statements

@@ -91,7 +91,7 @@ class Fragment:
 
         try:
           if tokens[-1] == token.SEMICOLON or isinstance(tokens[-1], list):
-            body = stmt.parse_block(tokens)
+            body = stmt.parse_block(tokens, decl.parse)
             print
             for statement in body:
                 statement.__print__('')
