@@ -14,9 +14,15 @@ class Arguments:
         self.method = method
         self.args = args
 
+    def _fmt_arg(self, arg):
+        if isinstance(arg, tuple):
+            return '%s:%s' % tuple(str(a) for a in arg)
+        else:
+            return str(arg)
+
     def __str__(self):
         return str(self.func) + self.method[0] + \
-            ', '.join(str(arg) for arg in self.args) + self.method[1]
+            ', '.join(self._fmt_arg(arg) for arg in self.args) + self.method[1]
 
 class Set:
     def __init__(self, members):
@@ -92,7 +98,8 @@ class Omitted:
 
 # maybe-expression-list :== <empty> | expression-list
 
-# bitspec :== expression2  (+, -, *, / only)
+# bitspec :== expression2                  (+, -, *, / only)
+#           | expression2 ':' expression2  (+, -, *, / only)
 # bitspec-list :== bitspec | bitspec-list ',' bitspec
 
 # assignable :== identifier-chain
@@ -145,7 +152,12 @@ def parse_assignable(ts):
             try:
                 args = []
                 while True:
-                    args.append(expr.parse_binary(sub_ts, len(operators) - 2))
+                    arg = expr.parse_binary(sub_ts, len(operators) - 2)
+                    if sub_ts.consume_if(token.COLON):
+                        arg1 = expr.parse_binary(sub_ts, len(operators) - 2)
+                        args.append((arg, arg1))
+                    else:
+                        args.append(arg)
                     if not sub_ts.consume_if(token.COMMA):
                         break
                 if sub_ts.consume() != token.GREATER:
