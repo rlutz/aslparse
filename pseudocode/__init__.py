@@ -59,5 +59,14 @@ class ParseError(Exception):
         del exc_traceback  # avoid circular reference
 
         print
-        print ' '.join('<<<' + str(t) + '>>>' if i == self.ts.pos else str(t)
-                       for i, t in enumerate(self.ts.tokens))
+        for i, t in enumerate(self.ts.tokens):
+            if i == self.ts.pos:
+                print '###',
+            else:
+                print '   ',
+            if isinstance(t, list):
+                print ' '.join('[...]' if isinstance(t1, list) else str(t1)
+                               for t1 in t[:10]) \
+                          + (' ...' if len(t) > 10 else '')
+            else:
+                print str(t)
