@@ -99,6 +99,7 @@ rw = {}
 
 for s in ['EOR',
           'IN',
+          'SEE',
           'UNDEFINED',
           'UNPREDICTABLE',
           'else',

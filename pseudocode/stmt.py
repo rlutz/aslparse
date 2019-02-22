@@ -18,6 +18,13 @@ class FunctionCall:
         print indent + str(self.func) + '(' + \
             ', '.join(str(arg) for arg in self.args) + ');'
 
+class See:
+    def __init__(self, target):
+        self.target = target
+
+    def __print__(self, indent):
+        print indent + 'SEE "%s";' % self.target
+
 class Undefined:
     def __print__(self, indent):
         print indent + 'UNDEFINED;'
@@ -121,6 +128,14 @@ def parse_statement(ts):
         stop = expr.parse2(ts)
         body = stmt.parse_body(ts)
         return stmt.For(var, start, stop, body)
+
+    if ts.consume_if(token.rw['SEE']):
+        s = ts.consume()
+        if not isinstance(s, token.String):
+            raise ParseError(ts)
+        if ts.consume() != token.SEMICOLON:
+            raise ParseError(ts)
+        return stmt.See(s.data)
 
     if ts.consume_if(token.rw['UNDEFINED']):
         if ts.consume() != token.SEMICOLON:
