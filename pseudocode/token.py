@@ -332,25 +332,36 @@ class Tokenizer:
         #print 'Character data: ', repr(data)
 
     def process_a(self, data):
-        if not data:
-            raise LexError(data, 0)
-        for i, ch in enumerate(data):
-            if not (ch >= 'A' and ch <= 'Z' or ch >= 'a' and ch <= 'z'
-                      or ch == '_' or i > 0 and (ch >= '0' and ch <= '9'
-                                                   or ch == '.')):
-                raise LexError(data, i)
-        self.tokens.append(token.intern_token(data, token.LinkedIdentifier))
+        parts = data.split('.')
+        for part in parts:
+            if not part:
+                raise LexError(part, 0)
+            for i, ch in enumerate(part):
+                if not (ch >= 'A' and ch <= 'Z' or ch >= 'a' and ch <= 'z'
+                          or ch == '_' or i > 0 and ch >= '0' and ch <= '9'):
+                    raise LexError(part, i)
+
+        for part in parts[:-1]:
+            self.tokens.append(token.intern_token(part, token.Identifier))
+            self.tokens.append(token.PERIOD)
+        self.tokens.append(token.intern_token(parts[-1],
+                                              token.LinkedIdentifier))
 
     def process_anchor(self, data):
-        if not data:
-            raise LexError(data, 0)
-        for i, ch in enumerate(data):
-            if not (ch >= 'A' and ch <= 'Z' or ch >= 'a' and ch <= 'z'
-                      or ch == '_' or i > 0 and (ch >= '0' and ch <= '9'
-                                                   or ch == '.')):
-                raise LexError(data, i)
-        self.tokens.append(token.intern_token(
-            data, token.DeclarationIdentifier))
+        parts = data.split('.')
+        for part in parts:
+            if not part:
+                raise LexError(part, 0)
+            for i, ch in enumerate(part):
+                if not (ch >= 'A' and ch <= 'Z' or ch >= 'a' and ch <= 'z'
+                          or ch == '_' or i > 0 and ch >= '0' and ch <= '9'):
+                    raise LexError(part, i)
+
+        for part in parts[:-1]:
+            self.tokens.append(token.intern_token(part, token.Identifier))
+            self.tokens.append(token.PERIOD)
+        self.tokens.append(token.intern_token(parts[-1],
+                                              token.DeclarationIdentifier))
 
     def process_end(self):
         while self.stack:

@@ -10,7 +10,7 @@ class Function:
 
     def __print__(self, indent):
         print indent + '%s %s(%s)' % (
-            str(self.datatype), str(self.name),
+            str(self.datatype), '.'.join(str(part) for part in self.name),
             ', '.join(str(pt) + ' ' + str(pi) for pt, pi in self.parameters))
         for statement in self.body:
             statement.__print__(indent + '    ')
@@ -23,9 +23,15 @@ class Function:
 
 def parse(ts):
     datatype = dtype.parse(ts)
-    name = ts.consume()
-    if not isinstance(name, token.DeclarationIdentifier):
-        raise ParseError(ts)
+    name = []
+    while True:
+        name.append(ts.consume())
+        if isinstance(name[-1], token.DeclarationIdentifier):
+            break
+        if not isinstance(name[-1], token.Identifier):
+            raise ParseError(ts)
+        if ts.consume() != token.PERIOD:
+            raise ParseError(ts)
     if ts.consume() != token.OPAREN:
         raise ParseError(ts)
     parameters = []
