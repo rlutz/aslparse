@@ -70,13 +70,12 @@ class Fragment:
         del self.buf[:]
 
     def end(self):
-        if self.buf:
-            try:
-                self.tokenizer.process(''.join(self.buf))
-            except LexError as e:
-                e.report()
-                sys.exit(1)
-            del self.buf[:]
+        try:
+            self.tokenizer.process(''.join(self.buf) + '\n')
+        except LexError as e:
+            e.report()
+            sys.exit(1)
+        del self.buf[:]
         self.tokenizer.process_end()
 
         #print '{'
