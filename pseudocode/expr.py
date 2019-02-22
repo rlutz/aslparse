@@ -38,7 +38,7 @@ class Unary:
         self.operator = operator
 
     def __str__(self):
-        return '%s %s' % (str(self.arg), str(self.operator))
+        return '%s%s' % (str(self.operator), str(self.arg))
 
 class Operator:
     def __init__(self, arg0, arg1, operator):
