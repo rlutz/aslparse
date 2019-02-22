@@ -218,7 +218,7 @@ def parse_assignable(ts):
 #               | identifier-chain '(' maybe-expression-list ')'
 #               | number
 #               | bitvector
-#               | '(' expression3 ')'
+#               | '(' expression-list ')'
 #               | '{' maybe-expression-list '}'
 #               | datatype 'UNKNOWN'
 #               | datatype 'IMPLEMENTATION_DEFINED' string
@@ -233,10 +233,12 @@ def parse_operand(ts):
         ts.consume()
         return expr.Numeric(t)
     elif ts.consume_if(token.OPAREN):
-        expression = expr.parse_ternary(ts)
+        expressions = expr.parse_list(ts)
         if ts.consume() != token.CPAREN:
             raise ParseError(ts)
-        return expression
+        if len(expressions) > 1:
+            return Values(expressions)
+        return expressions[0]
     elif ts.consume_if(token.OBRACE):
         if ts.peek() != token.CBRACE:
             members = expr.parse_list(ts)
