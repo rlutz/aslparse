@@ -73,6 +73,13 @@ class For:
         for statement in self.body:
             statement.__print__(indent + '    ')
 
+class Assert:
+    def __init__(self, expression):
+        self.expression = expression
+
+    def __print__(self, indent):
+        print indent + 'assert ' + str(self.expression) + ';'
+
 
 # body :== statement | indented-block
 
@@ -109,6 +116,7 @@ def parse_if_segment(ts):
 #             | 'SEE' string ';'
 #             | 'UNDEFINED' ';'
 #             | 'UNPREDICTABLE' ';'
+#             | 'assert' expression2 ';'
 #             | assignable '=' expression3 ';'
 #             | identifier-chain '(' maybe-expression-list ')' ';'
 
@@ -147,6 +155,12 @@ def parse_statement(ts):
         if ts.consume() != token.SEMICOLON:
             raise ParseError(ts)
         return stmt.Unpredictable()
+
+    if ts.consume_if(token.rw['assert']):
+        expression = expr.parse_binary(ts)
+        if ts.consume() != token.SEMICOLON:
+            raise ParseError(ts)
+        return stmt.Assert(expression)
 
 
     lhs = expr.parse_assignable(ts)
