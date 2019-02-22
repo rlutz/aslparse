@@ -114,12 +114,11 @@ class ImplementationDefined:
 # bitspec-clause :== '<' bitspec-list '>'
 
 def parse_bitspec_clause(ts):
-    if not ts.consume_if(token.LESS):
-        return None
-
     sub_ts = ts.fork()
     args = []
     try:
+        if sub_ts.consume() != token.LESS:
+            raise ParseError(sub_ts)
         while True:
             arg = expr.parse_binary(sub_ts, len(operators) - 2)
             if sub_ts.consume_if(token.COLON):
