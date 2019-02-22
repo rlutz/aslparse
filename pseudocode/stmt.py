@@ -9,6 +9,16 @@ class Assignment:
     def __print__(self, indent):
         print indent + '%s = %s;' % (str(self.lhs), str(self.expression))
 
+class ConstantAssignment:
+    def __init__(self, datatype, lhs, expression):
+        self.datatype = datatype
+        self.lhs = lhs
+        self.expression = expression
+
+    def __print__(self, indent):
+        print indent + 'constant %s %s = %s;' % (
+            str(self.datatype), str(self.lhs), str(self.expression))
+
 class FunctionCall:
     def __init__(self, func, args):
         self.func = func
@@ -130,6 +140,7 @@ def parse_if_segment(ts):
 #             | 'return' ';'
 #             | 'return' expression2 ';'
 #             | assignable '=' expression3 ';'
+#             | 'constant' datatype assignable '=' expression3 ';'
 #             | identifier-chain '(' maybe-expression-list ')' ';'
 
 def parse_statement(ts):
@@ -182,6 +193,16 @@ def parse_statement(ts):
         if ts.consume() != token.SEMICOLON:
             raise ParseError(ts)
         return stmt.Return(value)
+
+    if ts.consume_if(token.rw['constant']):
+        datatype = dtype.parse(ts)
+        lhs = expr.parse_assignable(ts)
+        if ts.consume() != token.EQUALS:
+            raise ParseError(ts)
+        expression = expr.parse_ternary(ts)
+        if ts.consume() != token.SEMICOLON:
+            raise ParseError(ts)
+        return stmt.ConstantAssignment(datatype, lhs, expression)
 
 
     lhs = expr.parse_assignable(ts)
