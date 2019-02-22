@@ -98,14 +98,20 @@ def intern_token(name, t):
 rw = {}
 
 for s in ['EOR',
+          'IMPLEMENTATION_DEFINED',
           'IN',
           'SEE',
           'UNDEFINED',
+          'UNKNOWN',
           'UNPREDICTABLE',
+          'bit',
+          'bits',
+          'boolean',
           'else',
           'elsif',
           'for',
           'if',
+          'integer',
           'then',
           'to']:
     s = intern(s)

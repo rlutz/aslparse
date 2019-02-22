@@ -1,4 +1,4 @@
-import token, expr
+import token, expr, dtype
 from . import ParseError
 
 class Identifier:
@@ -91,6 +91,21 @@ class Omitted:
     def __str__(self):
         return '-'
 
+class Unknown:
+    def __init__(self, datatype):
+        self.datatype = datatype
+
+    def __str__(self):
+        return str(self.datatype) + ' UNKNOWN'
+
+class ImplementationDefined:
+    def __init__(self, datatype, aspect):
+        self.datatype = datatype
+        self.aspect = aspect
+
+    def __str__(self):
+        return str(self.datatype) + \
+            ' IMPLEMENTATION_DEFINED "%s"' % self.aspect
 
 # identifier :== unlinked-identifier | linked-identifier
 # identifier-chain :== identifier | identifier-chain '.' identifier
@@ -205,6 +220,8 @@ def parse_assignable(ts):
 #               | bitvector
 #               | '(' expression3 ')'
 #               | '{' maybe-expression-list '}'
+#               | datatype 'UNKNOWN'
+#               | datatype 'IMPLEMENTATION_DEFINED' string
 
 def parse_operand(ts):
     t = ts.peek()
@@ -228,6 +245,19 @@ def parse_operand(ts):
         if ts.consume() != token.CBRACE:
             raise ParseError(ts)
         return expr.Set(members)
+    elif t == token.rw['bit'] or \
+         t == token.rw['bits'] or \
+         t == token.rw['boolean'] or \
+         t == token.rw['integer']:
+        datatype = dtype.parse(ts)
+
+        if ts.consume_if(token.rw['UNKNOWN']):
+            return expr.Unknown(datatype)
+        if ts.consume_if(token.rw['IMPLEMENTATION_DEFINED']):
+            s = ts.consume()
+            if not isinstance(s, token.String):
+                raise ParseError(ts)
+            return expr.ImplementationDefined(datatype, s.data)
     else:
         expression = parse_assignable(ts)
         if ts.consume_if(token.OPAREN):
