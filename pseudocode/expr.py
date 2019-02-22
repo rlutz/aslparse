@@ -208,7 +208,7 @@ def parse_assignable(ts):
             raise ParseError(ts)
         return Values(members)
 
-    if ts.comsume_if(token.HYPHEN):
+    if ts.consume_if(token.HYPHEN):
         return Omitted()
 
     raise ParseError(ts)
