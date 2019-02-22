@@ -63,6 +63,8 @@ def parse(ts):
             partial_types.append(dtype.parse(ts))
             if not ts.consume_if(token.COMMA):
                 break
+        if ts.consume() != token.CPAREN:
+            raise ParseError(ts)
         return Compound(partial_types)
 
     raise ParseError(ts)
