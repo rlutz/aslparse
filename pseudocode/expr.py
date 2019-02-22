@@ -285,7 +285,7 @@ def parse_unary(ts):
 
 
 # operator :== '+' | '-' | '*' | '/' | '==' | '!=' | '<' | '>'
-#            | '&&' | '||' | 'EOR' | ':' | 'IN'
+#            | '&&' | '||' | 'AND' | 'OR' | 'EOR' | ':' | 'IN'
 
 # expression2 :== expression1
 #               | expression1 operator expression1
@@ -294,7 +294,9 @@ operators = [
     [token.DOUBLE_VBAR],
     [token.DOUBLE_AMPERSAND],
     [token.rw['IN']],
+    [token.rw['OR']],
     [token.rw['EOR']],
+    [token.rw['AND']],
     [token.DOUBLE_EQUALS, token.EXCLAMATION_EQUALS],
     [token.LESS, token.GREATER],
     [token.COLON],
