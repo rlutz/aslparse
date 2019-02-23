@@ -2,11 +2,19 @@ import token, expr, dtype
 from . import ParseError
 
 class Identifier:
-    def __init__(self, chain):
-        self.chain = chain
+    def __init__(self, name):
+        self.name = name
 
     def __str__(self):
-        return '.'.join(str(t) for t in self.chain)
+        return str(self.name)
+
+class QualifiedIdentifier:
+    def __init__(self, expression, name):
+        self.expression = expression
+        self.name = name
+
+    def __str__(self):
+        return str(self.expression) + '.' + str(self.name)
 
 class Arguments:
     def __init__(self, func, method, args):
@@ -69,16 +77,15 @@ class Bits:
         self.elements = elements
 
     def __str__(self):
-        prefix = self.elements[0][:min(len(element)
-                                       for element in self.elements)]
-        while len(prefix) > 0:
-            if next((False for element in self.elements
-                     if element[:len(prefix)] != prefix), True):
-                break
-            prefix.pop()
-        return ''.join(str(t) + '.' for t in prefix) + '<' + \
-            ', '.join('.'.join(str(t) for t in element[len(prefix):])
-                      for element in self.elements) + '>'
+        is_qualified, = set(isinstance(element, expr.QualifiedIdentifier)
+                            for element in self.elements)
+        if is_qualified:
+            prefix, = set(str(element.expression) for element in self.elements)
+            return prefix + '.<' + \
+                ','.join(str(element.name) for element in self.elements) + '>'
+        else:
+            return '<' + \
+                ','.join(str(element) for element in self.elements) + '>'
 
 class Values:
     def __init__(self, members):
@@ -139,7 +146,10 @@ def parse_bitspec_clause(ts):
 
 
 # identifier :== unlinked-identifier | linked-identifier
-# identifier-chain :== identifier | identifier-chain '.' identifier
+# qualified-identifier :== identifier
+#                        | qualified-identifier '.' identifier
+#                        | qualified-identifier '[' maybe-expression-list ']'
+#                                               '.' identifier
 # identifier-list :== identifier | identifier-list ',' identifier
 
 # maybe-expression-list :== <empty> | expression-list
@@ -159,8 +169,18 @@ def parse_assignable(ts):
 
     if isinstance(t, token.Identifier) or \
        isinstance(t, token.LinkedIdentifier):
-        chain = [ts.consume()]
-        while ts.consume_if(token.PERIOD):
+        expression = expr.Identifier(ts.consume())
+        while True:
+            if ts.consume_if(token.OBRACKET):
+                if ts.peek() != token.CBRACKET:
+                    args = expr.parse_list(ts)
+                else:
+                    args = []
+                if ts.consume() != token.CBRACKET:
+                    raise ParseError(ts)
+                expression = expr.Arguments(expression, '[]', args)
+            if not ts.consume_if(token.PERIOD):
+                break
             t = ts.consume()
             if t == token.LESS:
                 elements = []
@@ -169,7 +189,7 @@ def parse_assignable(ts):
                     if not isinstance(t, token.Identifier) and \
                        not isinstance(t, token.LinkedIdentifier):
                         raise ParseError(ts)
-                    elements.append(chain + [t])
+                    elements.append(expr.QualifiedIdentifier(expression, t))
                     if not ts.consume_if(token.COMMA):
                         break
                 if ts.consume() != token.GREATER:
@@ -178,16 +198,7 @@ def parse_assignable(ts):
             if not isinstance(t, token.Identifier) and \
                not isinstance(t, token.LinkedIdentifier):
                 raise ParseError(ts)
-            chain.append(t)
-        expression = expr.Identifier(chain)
-        if ts.consume_if(token.OBRACKET):
-            if ts.peek() != token.CBRACKET:
-                args = expr.parse_list(ts)
-            else:
-                args = []
-            if ts.consume() != token.CBRACKET:
-                raise ParseError(ts)
-            expression = expr.Arguments(expression, '[]', args)
+            expression = expr.QualifiedIdentifier(expression, t)
         if ts.peek() == token.LESS:
             args = expr.parse_bitspec_clause(ts)
             if args is not None:
