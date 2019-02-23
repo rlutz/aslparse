@@ -38,10 +38,10 @@ class Void:
     def __str__(self):
         return 'void'
 
-dt_bit = Bit()
-dt_boolean = Boolean()
-dt_integer = Integer()
-dt_void = Void()
+dt_bit = dtype.Bit()
+dt_boolean = dtype.Boolean()
+dt_integer = dtype.Integer()
+dt_void = dtype.Void()
 
 # datatype :== 'bit'
 #            | 'bits' '(' expression3 ')'
@@ -53,7 +53,7 @@ dt_void = Void()
 
 def parse(ts):
     if ts.consume_if(token.rw['bit']):
-        return dt_bit
+        return dtype.dt_bit
 
     if ts.consume_if(token.rw['bits']):
         if ts.consume() != token.OPAREN:
@@ -61,13 +61,13 @@ def parse(ts):
         expression = expr.parse_ternary(ts)
         if ts.consume() != token.CPAREN:
             raise ParseError(ts)
-        return Bits(expression)
+        return dtype.Bits(expression)
 
     if ts.consume_if(token.rw['boolean']):
-        return dt_boolean
+        return dtype.dt_boolean
 
     if ts.consume_if(token.rw['integer']):
-        return dt_integer
+        return dtype.dt_integer
 
     if ts.consume_if(token.OPAREN):
         partial_types = []
@@ -77,12 +77,10 @@ def parse(ts):
                 break
         if ts.consume() != token.CPAREN:
             raise ParseError(ts)
-        return Compound(partial_types)
+        return dtype.Compound(partial_types)
 
     if isinstance(ts.peek(), token.Identifier) or \
        isinstance(ts.peek(), token.LinkedIdentifier):
-        if ts.pos + 1 < ts.stop and ts.tokens[ts.pos + 1] == token.PERIOD:
-            return dt_void
-        return Custom(ts.consume())
+        return dtype.Custom(ts.consume())
 
     raise ParseError(ts)
