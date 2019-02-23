@@ -27,9 +27,21 @@ class Compound:
     def __str__(self):
         return '(' + ', '.join(str(t) for t in self.partial_types) + ')'
 
+class Custom:
+    def __init__(self, identifier):
+        self.identifier = identifier
+
+    def __str__(self):
+        return str(self.identifier)
+
+class Void:
+    def __str__(self):
+        return 'void'
+
 dt_bit = Bit()
 dt_boolean = Boolean()
 dt_integer = Integer()
+dt_void = Void()
 
 # datatype :== 'bit'
 #            | 'bits' '(' expression3 ')'
@@ -66,5 +78,11 @@ def parse(ts):
         if ts.consume() != token.CPAREN:
             raise ParseError(ts)
         return Compound(partial_types)
+
+    if isinstance(ts.peek(), token.Identifier) or \
+       isinstance(ts.peek(), token.LinkedIdentifier):
+        if ts.pos + 1 < ts.stop and ts.tokens[ts.pos + 1] == token.PERIOD:
+            return dt_void
+        return Custom(ts.consume())
 
     raise ParseError(ts)
