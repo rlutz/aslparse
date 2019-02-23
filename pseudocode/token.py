@@ -121,15 +121,19 @@ for s in ['AND',
           'bit',
           'bits',
           'boolean',
+          'case',
           'constant',
           'else',
           'elsif',
           'for',
           'if',
           'integer',
+          'of',
+          'otherwise',
           'return',
           'then',
-          'to']:
+          'to',
+          'when']:
     s = intern(s)
     rw[s] = token.intern_token(s, token.ReservedWord)
 

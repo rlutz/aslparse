@@ -83,6 +83,29 @@ class For:
         for statement in self.body:
             statement.__print__(indent + '    ')
 
+class Case:
+    def __init__(self, expression, clauses):
+        self.expression = expression
+        self.clauses = clauses
+
+    def __print__(self, indent):
+        print indent + 'case ' + str(self.expression) + ' of'
+        for clause in self.clauses:
+            clause.__print__(indent + '    ')
+
+class CaseClause:
+    def __init__(self, patterns, body):
+        self.patterns = patterns
+        self.body = body
+
+    def __print__(self, indent):
+        if self.patterns is not None:
+            print indent + 'when ' + ', '.join(str(p) for p in self.patterns)
+        else:
+            print indent + 'otherwise'
+        for statement in self.body:
+            statement.__print__(indent + '    ')
+
 class Assert:
     def __init__(self, expression):
         self.expression = expression
@@ -131,8 +154,41 @@ def parse_if_segment(ts):
     return stmt.If(expression, then_body, else_body)
 
 
+# case-pattern :== identifier | bitvector
+# case-pattern-list :== case-pattern | case-pattern ',' case-pattern-list
+
+# case-clause :== 'when' case-pattern body
+# case-clause-list :== case-clause
+#                    | case-clause case-clause-list
+#                    | 'otherwise' body
+
+def parse_case_clause(ts):
+    if ts.consume() == token.rw['when']:
+        patterns = []
+        while True:
+            pattern = ts.consume()
+            if not isinstance(pattern, token.Identifier) and \
+               not isinstance(pattern, token.LinkedIdentifier) and \
+               not isinstance(pattern, token.Bitvector):
+                raise ParseError(ts)
+            patterns.append(pattern)
+            if not ts.consume_if(token.COMMA):
+                break
+        body = stmt.parse_body(ts)
+        return stmt.CaseClause(patterns, body)
+
+    if ts.consume() == token.rw['otherwise']:
+        body = stmt.parse_body(ts)
+        if ts.end != len(ts.tokens):
+            raise ParseError(ts)
+        return stmt.CaseClause(None, body)
+
+    raise ParseError(ts)
+
+
 # statement :== 'if' if-segment
 #             | 'for' identifier '=' expression2 'to' expression2 body
+#             | 'case' expression2 'of' BEGIN case-clause-list END
 #             | 'SEE' string ';'
 #             | 'UNDEFINED' ';'
 #             | 'UNPREDICTABLE' ';'
@@ -160,6 +216,15 @@ def parse_statement(ts):
         stop = expr.parse_binary(ts)
         body = stmt.parse_body(ts)
         return stmt.For(var, start, stop, body)
+
+    if ts.consume_if(token.rw['case']):
+        expression = expr.parse_binary(ts)
+        if ts.consume() != token.rw['of']:
+            raise ParseError(ts)
+        if not isinstance(ts.peek(), list):
+            raise ParseError(ts)
+        clauses = stmt.parse_block(ts.consume(), parse_case_clause)
+        return stmt.Case(expression, clauses)
 
     if ts.consume_if(token.rw['SEE']):
         s = ts.consume()
@@ -233,6 +298,7 @@ def parse_statement(ts):
 # indented-block :== BEGIN statements END
 
 def parse_block(tokens, parse_func):
+    assert isinstance(tokens, list)
     statements = []
     start = 0
     while start < len(tokens):
