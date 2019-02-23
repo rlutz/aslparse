@@ -176,7 +176,7 @@ def parse_if_segment(ts):
 #                    | 'otherwise' body
 
 def parse_case_clause(ts):
-    if ts.consume() == token.rw['when']:
+    if ts.consume_if(token.rw['when']):
         patterns = []
         while True:
             pattern = ts.consume()
@@ -187,16 +187,15 @@ def parse_case_clause(ts):
             patterns.append(pattern)
             if not ts.consume_if(token.COMMA):
                 break
-        body = stmt.parse_body(ts)
-        return stmt.CaseClause(patterns, body)
+    elif ts.consume_if(token.rw['otherwise']):
+        patterns = None
+    else:
+        raise ParseError(ts)
 
-    if ts.consume() == token.rw['otherwise']:
-        body = stmt.parse_body(ts)
-        if ts.end != len(ts.tokens):
-            raise ParseError(ts)
-        return stmt.CaseClause(None, body)
-
-    raise ParseError(ts)
+    body = stmt.parse_body(ts)
+    if patterns is None and ts.end != len(ts.tokens):
+        raise ParseError(ts)
+    return stmt.CaseClause(patterns, body)
 
 
 # statement :== 'if' if-segment
