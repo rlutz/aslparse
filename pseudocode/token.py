@@ -268,6 +268,10 @@ class Tokenizer:
                 name = data[pos:pos + n]
                 self.tokens.append(token.intern_token(name, token.Number))
                 pos += n
+                if pos < len(data) and (ch >= '0' and ch <= '9' or
+                                        ch >= 'A' and ch <= 'Z' or
+                           ch == '_' or ch >= 'a' and ch <= 'z'):
+                    raise LexError(data, pos)
             elif ch == ':':
                 self.tokens.append(token.COLON)
                 pos += 1
