@@ -182,6 +182,12 @@ class Tokenizer:
                     indent += 1
                 pos += 1 + indent * 4
                 if data.startswith(' ', pos):
+                    # ignore irregular line break inside 'if' condition
+                    for t in reversed(self.tokens):
+                        if t == token.rw['if'] or t == token.rw['then']:
+                            break
+                    if t == token.rw['if']:
+                        continue
                     raise LexError(data, pos)
                 while len(self.stack) < indent:
                     self.stack.append(self.tokens)
