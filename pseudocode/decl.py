@@ -22,8 +22,10 @@ class Function:
 # declaration :== datatype decl-identifier '(' maybe-parameter-list ')' body
 
 def parse(ts):
-    if isinstance(ts.peek(), token.Identifier) and \
-          ts.pos + 1 < ts.stop and ts.tokens[ts.pos + 1] == token.PERIOD:
+    if (isinstance(ts.peek(), token.Identifier) or
+        isinstance(ts.peek(), token.DeclarationIdentifier)) and \
+          ts.pos + 1 < ts.stop and (ts.tokens[ts.pos + 1] == token.PERIOD or
+                                    ts.tokens[ts.pos + 1] == token.OPAREN):
         datatype = dtype.dt_void
     else:
         datatype = dtype.parse(ts)
