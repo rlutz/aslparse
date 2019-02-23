@@ -19,15 +19,18 @@ class ConstantAssignment:
         print indent + 'constant %s %s = %s;' % (
             str(self.datatype), str(self.lhs), str(self.expression))
 
-class DeclarationAssignment:
+class Declaration:
     def __init__(self, datatype, lhs, expression):
         self.datatype = datatype
         self.lhs = lhs
         self.expression = expression
 
     def __print__(self, indent):
-        print indent + '%s %s = %s;' % (
-            str(self.datatype), str(self.lhs), str(self.expression))
+        if self.expression is None:
+            print indent + '%s %s;' % (str(self.datatype), str(self.lhs))
+        else:
+            print indent + '%s %s = %s;' % (
+                str(self.datatype), str(self.lhs), str(self.expression))
 
 class FunctionCall:
     def __init__(self, func, args):
@@ -287,12 +290,13 @@ def parse_statement(ts):
        ts.peek() == token.rw['integer']:
         datatype = dtype.parse(ts)
         lhs = expr.parse_assignable(ts)
-        if ts.consume() != token.EQUALS:
-            raise ParseError(ts)
-        expression = expr.parse_ternary(ts)
+        if ts.consume_if(token.EQUALS):
+            expression = expr.parse_ternary(ts)
+        else:
+            expression = None
         if ts.consume() != token.SEMICOLON:
             raise ParseError(ts)
-        return stmt.DeclarationAssignment(datatype, lhs, expression)
+        return stmt.Declaration(datatype, lhs, expression)
 
 
     lhs = expr.parse_assignable(ts)
