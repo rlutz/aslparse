@@ -273,8 +273,6 @@ def parse_statement(ts):
     lhs = expr.parse_assignable(ts)
 
     if ts.consume_if(token.OPAREN):
-        if not isinstance(lhs, expr.Identifier):
-            raise ParseError(ts)
         if ts.peek() != token.CPAREN:
             args = expr.parse_list(ts)
         else:
