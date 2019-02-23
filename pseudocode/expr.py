@@ -52,16 +52,35 @@ class Unary:
         self.operator = operator
 
     def __str__(self):
-        return '%s%s' % (str(self.operator), str(self.arg))
+        if isinstance(self.arg, expr.Ternary) or \
+           isinstance(self.arg, expr.Operator):
+            return '%s(%s)' % (str(self.operator), str(self.arg))
+        else:
+            return '%s%s' % (str(self.operator), str(self.arg))
 
 class Operator:
-    def __init__(self, arg0, arg1, operator):
+    def __init__(self, arg0, arg1, operator, precedence):
         self.arg0 = arg0
         self.arg1 = arg1
         self.operator = operator
+        self.precedence = precedence
 
     def __str__(self):
-        return '%s %s %s' % (str(self.arg0), str(self.operator), str(self.arg1))
+        if isinstance(self.arg0, expr.Ternary) or \
+           isinstance(self.arg0, expr.Operator) and \
+              self.arg0.precedence < self.precedence:
+            arg0 = '(' + str(self.arg0) + ')'
+        else:
+            arg0 = str(self.arg0)
+
+        if isinstance(self.arg1, expr.Ternary) or \
+           isinstance(self.arg1, expr.Operator) and \
+              self.arg1.precedence < self.precedence:
+            arg1 = '(' + str(self.arg1) + ')'
+        else:
+            arg1 = str(self.arg1)
+
+        return '%s %s %s' % (arg0, str(self.operator), arg1)
 
 class Ternary:
     def __init__(self, condition, arg0, arg1):
@@ -70,7 +89,8 @@ class Ternary:
         self.arg1 = arg1
 
     def __str__(self):
-        return '%s ? %s : %s' % (str(self.condition), str(self.arg0), str(self.arg1))
+        return '%s ? %s : %s' % (str(self.condition),
+                                 str(self.arg0), str(self.arg1))
 
 class Bits:
     def __init__(self, elements):
@@ -342,9 +362,10 @@ def parse_binary(ts, precedence_limit = 0):
         expression = expr.parse_unary(ts)
 
         while True:
-            expr_op = stack.pop()
-            if expr_op is not None:
-                expression = expr.Operator(expr_op[0], expression, expr_op[1])
+            expr_op_prec = stack.pop()
+            if expr_op_prec is not None:
+                expression = expr.Operator(expr_op_prec[0], expression,
+                                           expr_op_prec[1], expr_op_prec[2])
 
             if ts.maybe_peek() in operators[len(stack)]:
                 break
@@ -352,7 +373,7 @@ def parse_binary(ts, precedence_limit = 0):
             if len(stack) == precedence_limit:
                 return expression
 
-        stack.append((expression, ts.consume()))
+        stack.append((expression, ts.consume(), len(stack)))
         del expression
 
 
