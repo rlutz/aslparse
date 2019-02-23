@@ -1,4 +1,4 @@
-import token, stmt, dtype, decl
+import token, expr, stmt, dtype, decl
 from . import ParseError
 
 class Function:
@@ -15,6 +15,17 @@ class Function:
         for statement in self.body:
             statement.__print__(indent + '    ')
 
+class Constant:
+    def __init__(self, datatype, name, expression):
+        self.datatype = datatype
+        self.name = name
+        self.expression = expression
+
+    def __print__(self, indent):
+        print indent + 'constant %s %s = %s;' % (
+            str(self.datatype), '.'.join(str(part) for part in self.name),
+            str(self.expression))
+
 # parameter :== datatype identifier
 # parameter-list :== parameter | parameter-list ',' parameter
 # maybe-parameter-list :== <empty> | parameter-list
@@ -22,6 +33,25 @@ class Function:
 # declaration :== datatype decl-identifier '(' maybe-parameter-list ')' body
 
 def parse(ts):
+    if ts.consume_if(token.rw['constant']):
+        datatype = dtype.parse(ts)
+        name = []
+        while True:
+            name.append(ts.consume())
+            if isinstance(name[-1], token.DeclarationIdentifier):
+                break
+            if not isinstance(name[-1], token.Identifier):
+                raise ParseError(ts)
+            if ts.consume() != token.PERIOD:
+                raise ParseError(ts)
+        if ts.consume() != token.EQUALS:
+            raise ParseError(ts)
+        expression = expr.parse_ternary(ts)
+        if ts.consume() != token.SEMICOLON:
+            raise ParseError(ts)
+        return decl.Constant(datatype, name, expression)
+
+
     if (isinstance(ts.peek(), token.Identifier) or
         isinstance(ts.peek(), token.DeclarationIdentifier)) and \
           ts.pos + 1 < ts.stop and (ts.tokens[ts.pos + 1] == token.PERIOD or
