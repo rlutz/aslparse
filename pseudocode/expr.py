@@ -232,7 +232,7 @@ def parse_assignable(ts):
             if not isinstance(t, token.Identifier) and \
                not isinstance(t, token.LinkedIdentifier):
                 raise ParseError(ts)
-            elements.append([t])
+            elements.append(t)
             if not ts.consume_if(token.COMMA):
                 break
         if ts.consume() != token.GREATER:
