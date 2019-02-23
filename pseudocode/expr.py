@@ -268,7 +268,8 @@ def parse_assignable(ts):
 def parse_operand(ts):
     t = ts.peek()
 
-    if isinstance(t, token.Number):
+    if isinstance(t, token.Number) or \
+       isinstance(t, token.HexadecimalNumber):
         ts.consume()
         return expr.Numeric(t)
     elif isinstance(t, token.Bitvector):

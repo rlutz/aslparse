@@ -77,6 +77,13 @@ class Number:
     def __str__(self):
         return self.name # 'num:' + self.name
 
+class HexadecimalNumber:
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return '0x' + self.name # 'num:' + self.name
+
 class Bitvector:
     def __init__(self, name):
         self.name = name
@@ -259,14 +266,29 @@ class Tokenizer:
                     self.tokens.append(token.SLASH)
                     pos += 1
             elif ch >= '0' and ch <= '9':
-                n = 1
-                while pos + n < len(data):
-                    ch = data[pos + n]
-                    if not (ch >= '0' and ch <= '9'):
-                        break
-                    n += 1
-                name = data[pos:pos + n]
-                self.tokens.append(token.intern_token(name, token.Number))
+                if pos + 1 < len(data) and data[pos:pos + 2] == '0x':
+                    pos += 2
+                    n = 0
+                    while pos + n < len(data):
+                        ch = data[pos + n]
+                        if not (ch >= '0' and ch <= '9' or
+                                ch >= 'A' and ch <= 'F' or
+                                ch >= 'a' and ch <= 'f'):
+                            break
+                        n += 1
+                    if n == 0:
+                        raise LexError(data, pos)
+                    self.tokens.append(token.intern_token(
+                        data[pos:pos + n], token.HexadecimalNumber))
+                else:
+                    n = 1
+                    while pos + n < len(data):
+                        ch = data[pos + n]
+                        if not (ch >= '0' and ch <= '9'):
+                            break
+                        n += 1
+                    self.tokens.append(token.intern_token(
+                        data[pos:pos + n], token.Number))
                 pos += n
                 if pos < len(data) and (ch >= '0' and ch <= '9' or
                                         ch >= 'A' and ch <= 'Z' or
