@@ -186,6 +186,8 @@ def parse_case_clause(ts):
             pattern = ts.consume()
             if not isinstance(pattern, token.Identifier) and \
                not isinstance(pattern, token.LinkedIdentifier) and \
+               not isinstance(pattern, token.Number) and \
+               not isinstance(pattern, token.HexadecimalNumber) and \
                not isinstance(pattern, token.Bitvector):
                 raise ParseError(ts)
             patterns.append(pattern)
