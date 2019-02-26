@@ -49,7 +49,7 @@ def parse(tokens, start, stop, parse_func):
     ts = TokenStream(tokens, start, stop)
     result = parse_func(ts)
     if ts.pos != stop:
-        raise ParseError(self)
+        raise ParseError(ts)
     if ts.forks:
-        raise ParseError(self)
+        raise ParseError(ts)
     return result
