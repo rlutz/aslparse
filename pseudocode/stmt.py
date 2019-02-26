@@ -313,7 +313,7 @@ def parse_statement(ts):
 
     if ts.consume_if(token.rw['constant']):
         datatype = dtype.parse(ts)
-        lhs = expr.parse_assignable(ts)
+        lhs = expr.parse_identifier_chain(ts)
         if ts.consume() != token.EQUALS:
             raise ParseError(ts)
         expression = expr.parse_ternary(ts)
@@ -324,7 +324,7 @@ def parse_statement(ts):
     sub_ts = ts.fork()
     try:
         datatype = dtype.parse(sub_ts)
-        lhs = expr.parse_assignable(sub_ts)
+        lhs = expr.parse_identifier_chain(sub_ts)
         if sub_ts.consume_if(token.EQUALS):
             expression = expr.parse_ternary(sub_ts)
         else:

@@ -138,6 +138,22 @@ class ImplementationDefined:
                 ' IMPLEMENTATION_DEFINED "%s"' % self.aspect
 
 
+def parse_identifier_chain(ts):
+    expression = None
+    while True:
+        t = ts.consume()
+        if not isinstance(t, token.Identifier) and \
+           not isinstance(t, token.LinkedIdentifier):
+            raise ParseError(ts)
+        if expression is None:
+            expression = expr.Identifier(t)
+        else:
+            expression = expr.QualifiedIdentifier(expression, t)
+        if not ts.consume_if(token.PERIOD):
+            break
+    return expression
+
+
 # bitspec :== expression2                   (+, -, *, / only)
 #           | expression2 ':' expression2   (+, -, *, / only)
 #           | expression2 '+:' expression2  (+, -, *, / only)
