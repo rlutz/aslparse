@@ -20,17 +20,15 @@ class ConstantAssignment:
             str(self.datatype), str(self.lhs), str(self.expression))
 
 class Declaration:
-    def __init__(self, datatype, lhs, expression):
+    def __init__(self, datatype, variables):
         self.datatype = datatype
-        self.lhs = lhs
-        self.expression = expression
+        self.variables = variables
 
     def __print__(self, indent):
-        if self.expression is None:
-            print indent + '%s %s;' % (str(self.datatype), str(self.lhs))
-        else:
-            print indent + '%s %s = %s;' % (
-                str(self.datatype), str(self.lhs), str(self.expression))
+        variables = ', '.join('%s = %s' % (str(lhs), str(expression))
+                              if expression is not None else str(lhs)
+                              for lhs, expression in self.variables)
+        print indent + '%s %s;' % (str(self.datatype), variables)
 
 class FunctionCall:
     def __init__(self, func, args):
@@ -350,18 +348,22 @@ def parse_statement(ts):
     sub_ts = ts.fork()
     try:
         datatype = dtype.parse(sub_ts)
-        lhs = expr.parse_identifier_chain(sub_ts)
-        if sub_ts.consume_if(token.EQUALS):
-            expression = expr.parse_ternary(sub_ts)
-        else:
-            expression = None
+        variables = []
+        while True:
+            lhs = expr.parse_identifier_chain(sub_ts)
+            if sub_ts.consume_if(token.EQUALS):
+                variables.append((lhs, expr.parse_ternary(sub_ts)))
+            else:
+                variables.append((lhs, None))
+            if not sub_ts.consume_if(token.COMMA):
+                break
         if sub_ts.consume() != token.SEMICOLON:
             raise ParseError(sub_ts)
     except ParseError:
         ts.abandon(sub_ts)
     else:
         ts.become(sub_ts)
-        return stmt.Declaration(datatype, lhs, expression)
+        return stmt.Declaration(datatype, variables)
 
 
     lhs = expr.parse_assignable(ts)
