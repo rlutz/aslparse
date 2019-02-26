@@ -84,15 +84,17 @@ class If:
             print indent + 'elsif %s then' % str(statement.expression)
 
 class For:
-    def __init__(self, var, start, stop, body):
+    def __init__(self, var, start, down, stop, body):
         self.var = var
         self.start = start
+        self.down = down
         self.stop = stop
         self.body = body
 
     def __print__(self, indent):
-        print indent + 'for %s = %s to %s' % (
-            str(self.var), str(self.start), str(self.stop))
+        print indent + 'for %s = %s %s %s' % (
+            str(self.var), str(self.start), 'downto' if self.down else 'to',
+            str(self.stop))
         for statement in self.body:
             statement.__print__(indent + '    ')
 
@@ -237,6 +239,7 @@ def parse_case_clause(ts):
 
 # statement :== 'if' if-segment
 #             | 'for' identifier '=' expression2 'to' expression2 body
+#             | 'for' identifier '=' expression2 'downto' expression2 body
 #             | 'case' expression2 'of' BEGIN case-clause-list END
 #             | 'SEE' string ';'
 #             | 'UNDEFINED' ';'
@@ -262,11 +265,15 @@ def parse_statement(ts):
         if ts.consume() != token.EQUALS:
             raise ParseError(ts)
         start = expr.parse_binary(ts)
-        if ts.consume() != token.rw['to']:
+        if ts.consume_if(token.rw['to']):
+            down = False
+        elif ts.consume_if(token.rw['downto']):
+            down = True
+        else:
             raise ParseError(ts)
         stop = expr.parse_binary(ts)
         body = stmt.parse_body(ts)
-        return stmt.For(var, start, stop, body)
+        return stmt.For(var, start, down, stop, body)
 
     if ts.consume_if(token.rw['while']):
         condition = expr.parse_binary(ts)
