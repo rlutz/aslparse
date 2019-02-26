@@ -138,8 +138,9 @@ class ImplementationDefined:
                 ' IMPLEMENTATION_DEFINED "%s"' % self.aspect
 
 
-# bitspec :== expression2                  (+, -, *, / only)
-#           | expression2 ':' expression2  (+, -, *, / only)
+# bitspec :== expression2                   (+, -, *, / only)
+#           | expression2 ':' expression2   (+, -, *, / only)
+#           | expression2 '+:' expression2  (+, -, *, / only)
 # bitspec-list :== bitspec | bitspec-list ',' bitspec
 # bitspec-clause :== '<' bitspec-list '>'
 
@@ -269,6 +270,7 @@ def parse_assignable(ts):
 #               | '(' expression-list ')'
 #               | '{' maybe-expression-list '}'
 #               | datatype 'UNKNOWN'
+#               | datatype 'IMPLEMENTATION_DEFINED'
 #               | datatype 'IMPLEMENTATION_DEFINED' string
 
 def parse_operand(ts):
@@ -347,7 +349,7 @@ def parse_unary(ts):
 
 
 # operator :== '+' | '-' | '*' | '/' | 'DIV' | 'MOD' | '==' | '!=' | '<' | '>'
-#            | '&&' | '||' | 'AND' | 'OR' | 'EOR' | ':' | 'IN'
+#            | '<=' | '>=' | '&&' | '||' | 'AND' | 'OR' | 'EOR' | ':' | 'IN'
 
 # expression2 :== expression1
 #               | expression1 operator expression1

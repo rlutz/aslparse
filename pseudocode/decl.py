@@ -90,7 +90,25 @@ class Type:
 # parameter-list :== parameter | parameter-list ',' parameter
 # maybe-parameter-list :== <empty> | parameter-list
 
-# declaration :== datatype decl-identifier '(' maybe-parameter-list ')' body
+# value-list :== identifier | value-list ',' identifier
+
+# declaration :== datatype decl-identifier '(' maybe-parameter-list ')' ';'
+#               | datatype decl-identifier '(' maybe-parameter-list ')' body
+#               | datatype decl-identifier ';'
+#               | datatype decl-identifier body
+#               | datatype decl-identifier '[' parameter-list ']' ';'
+#               | datatype decl-identifier '[' parameter-list ']' body
+#               | decl-identifier '=' datatype identifier ';'
+#               | decl-identifier '=' datatype identifier body
+#               | decl-identifier '[' parameter-list ']'
+#                     '=' datatype identifier ';'
+#               | decl-identifier '[' parameter-list ']'
+#                     '=' datatype identifier body
+#               | 'constant' datatype identifier-chain '=' expression3 ';'
+#               | 'enumeration' identifier-chain '{' value-list '}' ';'
+#               | 'type' identifier-chain 'is' '(' parameter-list ')'
+#               | 'array' datatype identifier-chain
+#                     '[' expression2 '..' expression2 ']' ';'
 
 def parse_name(ts):
     name = []

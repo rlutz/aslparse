@@ -182,7 +182,7 @@ def parse_if_segment(ts):
     return stmt.If(expression, then_body, else_body)
 
 
-# case-pattern :== identifier | bitvector
+# case-pattern :== identifier | number | bitvector
 # case-pattern-list :== case-pattern | case-pattern ',' case-pattern-list
 
 # case-clause :== 'when' case-pattern body
@@ -234,9 +234,10 @@ def parse_case_clause(ts):
 #             | 'assert' expression2 ';'
 #             | 'return' ';'
 #             | 'return' expression2 ';'
+#             | datatype assignable ';'
+#             | datatype assignable '=' expression3 ';'
 #             | assignable '=' expression3 ';'
 #             | 'constant' datatype assignable '=' expression3 ';'
-#             | datatype assignable '=' expression3 ';'
 #             | identifier-chain '(' maybe-expression-list ')' ';'
 
 def parse_statement(ts):
