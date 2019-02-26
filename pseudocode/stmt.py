@@ -235,6 +235,10 @@ def parse_case_clause(ts):
     return stmt.CaseClause(patterns, body)
 
 
+# variable-def :== identifier-chain
+#                | identifier-chain '=' expression3
+# variable-def-list :== variable-def | variable-def-list ',' variable-def
+
 # statement :== 'if' if-segment
 #             | 'for' identifier '=' expression2 'to' expression2 body
 #             | 'for' identifier '=' expression2 'downto' expression2 body
@@ -247,10 +251,9 @@ def parse_case_clause(ts):
 #             | 'assert' expression2 ';'
 #             | 'return' ';'
 #             | 'return' expression2 ';'
-#             | datatype identifier-chain ';'
-#             | datatype identifier-chain '=' expression3 ';'
+#             | datatype variable-def-list ';'
+#             | 'constant' datatype variable-def ';'
 #             | assignable '=' expression3 ';'
-#             | 'constant' datatype identifier-chain '=' expression3 ';'
 #             | identifier-chain '(' maybe-expression-list ')' ';'
 
 def parse_statement(ts):

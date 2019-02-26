@@ -375,8 +375,18 @@ def parse_unary(ts):
     return expr.parse_operand(ts)
 
 
-# operator :== '+' | '-' | '*' | '/' | 'DIV' | 'MOD' | '==' | '!=' | '<' | '>'
-#            | '<=' | '>=' | '&&' | '||' | 'AND' | 'OR' | 'EOR' | ':' | 'IN'
+# operator :== '||'
+#            | '&&'
+#            | 'IN'
+#            | 'OR'
+#            | 'EOR'
+#            | 'AND'
+#            | '==' | '!='
+#            | '<' | '<=' | '>' | '>='
+#            | '<<' | '>>' | ':'
+#            | '+' | '-'
+#            | '*' | '/' | 'DIV' | 'MOD'
+#            | '^'
 
 # expression2 :== expression1
 #               | expression1 operator expression1
