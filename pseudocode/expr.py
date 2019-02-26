@@ -415,19 +415,28 @@ def parse_binary(ts, precedence_limit = 0):
         del expression
 
 
+# ternary-segment :== expression2 'then' expression2 'elsif' ternary-segment
+#                   | expression2 'then' expression2 'else' expression3
+
 # expression3 :== expression2
-#               | 'if' expression2 'then' expression2 'else' expression2
+#               | 'if' ternary-segment
+
+def parse_ternary_segment(ts):
+    condition = expr.parse_binary(ts)
+    if ts.consume() != token.rw['then']:
+        raise ParseError(ts)
+    arg0 = expr.parse_binary(ts)
+    if ts.consume_if(token.rw['elsif']):
+        arg1 = expr.parse_ternary_segment(ts)
+    elif ts.consume_if(token.rw['else']):
+        arg1 = expr.parse_ternary(ts)
+    else:
+        raise ParseError(ts)
+    return expr.Ternary(condition, arg0, arg1)
 
 def parse_ternary(ts):
     if ts.consume_if(token.rw['if']):
-        condition = expr.parse_binary(ts)
-        if ts.consume() != token.rw['then']:
-            raise ParseError(ts)
-        arg0 = expr.parse_binary(ts)
-        if ts.consume() != token.rw['else']:
-            raise ParseError(ts)
-        arg1 = expr.parse_ternary(ts)
-        return expr.Ternary(condition, arg0, arg1)
+        return parse_ternary_segment(ts)
 
     return expr.parse_binary(ts)
 
