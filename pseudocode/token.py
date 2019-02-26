@@ -265,7 +265,8 @@ class Tokenizer:
             elif ch == '-':
                 self.tokens.append(token.HYPHEN)
                 pos += 1
-            elif ch == '.':
+            elif ch == '.' and (pos + 1 == len(data) or not (
+                    data[pos + 1] >= '0' and data[pos + 1] <= '9')):
                 self.tokens.append(token.PERIOD)
                 pos += 1
             elif ch == '/':
@@ -277,7 +278,7 @@ class Tokenizer:
                 else:
                     self.tokens.append(token.SLASH)
                     pos += 1
-            elif ch >= '0' and ch <= '9':
+            elif ch >= '0' and ch <= '9' or ch == '.':
                 if pos + 1 < len(data) and data[pos:pos + 2] == '0x':
                     pos += 2
                     n = 0
@@ -296,7 +297,7 @@ class Tokenizer:
                     n = 1
                     while pos + n < len(data):
                         ch = data[pos + n]
-                        if not (ch >= '0' and ch <= '9'):
+                        if not (ch >= '0' and ch <= '9' or ch == '.'):
                             break
                         n += 1
                     self.tokens.append(token.intern_token(
