@@ -54,6 +54,13 @@ class Unpredictable:
     def __print__(self, indent):
         print indent + 'UNPREDICTABLE;'
 
+class ImplementationDefined:
+    def __init__(self, aspect):
+        self.aspect = aspect
+
+    def __str__(self):
+        return 'IMPLEMENTATION_DEFINED "%s"' % self.aspect
+
 class If:
     def __init__(self, expression, then_body, else_body):
         self.expression = expression
@@ -248,6 +255,7 @@ def parse_case_clause(ts):
 #             | 'SEE' string ';'
 #             | 'UNDEFINED' ';'
 #             | 'UNPREDICTABLE' ';'
+#             | 'IMPLEMENTATION_DEFINED' string ';'
 #             | 'assert' expression2 ';'
 #             | 'return' ';'
 #             | 'return' expression2 ';'
@@ -322,6 +330,14 @@ def parse_statement(ts):
         if ts.consume() != token.SEMICOLON:
             raise ParseError(ts)
         return stmt.Unpredictable()
+
+    if ts.consume_if(token.rw['IMPLEMENTATION_DEFINED']):
+        if not isinstance(ts.peek(), token.String):
+            raise ParseError(ts)
+        aspect = ts.consume().data
+        if ts.consume() != token.SEMICOLON:
+            raise ParseError(ts)
+        return stmt.ImplementationDefined(aspect)
 
     if ts.consume_if(token.rw['assert']):
         expression = expr.parse_binary(ts)
