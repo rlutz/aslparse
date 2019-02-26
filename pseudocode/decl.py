@@ -16,18 +16,25 @@ class Function:
 
     def __print__(self, indent):
         name = '.'.join(str(part) for part in self.name)
-        params = ', '.join(str(pt) + ' ' + str(pi)
-                           for pt, pi in self.parameters)
+        if self.parameters is None:
+            params = None
+        else:
+            params = ', '.join(str(pt) + ' ' + str(pi)
+                               for pt, pi in self.parameters)
 
         if self.functype == SETTER:
-            if params:
+            if params is not None:
                 params = '[%s]' % params
+            else:
+                params = ''
             print indent + '%s%s = %s %s%s' % (
                 name, params, str(self.result_type), str(self.result_name),
                 ';' if self.body is None else '')
         elif self.functype == GETTER:
-            if params:
+            if params is not None:
                 params = '[%s]' % params
+            else:
+                params = ''
             print indent + '%s %s%s%s' % (
                 str(self.result_type), name, params,
                 ';' if self.body is None else '')
@@ -96,13 +103,13 @@ class Type:
 #               | datatype decl-identifier '(' maybe-parameter-list ')' body
 #               | datatype decl-identifier ';'
 #               | datatype decl-identifier body
-#               | datatype decl-identifier '[' parameter-list ']' ';'
-#               | datatype decl-identifier '[' parameter-list ']' body
+#               | datatype decl-identifier '[' maybe-parameter-list ']' ';'
+#               | datatype decl-identifier '[' maybe-parameter-list ']' body
 #               | decl-identifier '=' datatype identifier ';'
 #               | decl-identifier '=' datatype identifier body
-#               | decl-identifier '[' parameter-list ']'
+#               | decl-identifier '[' maybe-parameter-list ']'
 #                     '=' datatype identifier ';'
-#               | decl-identifier '[' parameter-list ']'
+#               | decl-identifier '[' maybe-parameter-list ']'
 #                     '=' datatype identifier body
 #               | 'constant' datatype identifier-chain '=' expression3 ';'
 #               | 'enumeration' identifier-chain '{' value-list '}' ';'
@@ -232,9 +239,9 @@ def parse(ts):
             functype = SETTER
         else:
             functype = GETTER
-    parameters = []
     if expected_closing is not None:
-        if ts.peek() != token.CPAREN:
+        parameters = []
+        if ts.peek() != expected_closing:
             while True:
                 param_type = dtype.parse(ts)
                 t = ts.consume()
@@ -246,6 +253,8 @@ def parse(ts):
                     break
         if ts.consume() != expected_closing:
             raise ParseError(ts)
+    else:
+        parameters = None
     if functype == SETTER:
         if ts.consume() != token.EQUALS:
             raise ParseError(ts)
