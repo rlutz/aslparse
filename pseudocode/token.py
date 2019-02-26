@@ -24,11 +24,13 @@ SLASH = intern('/')
 COLON = intern(':')
 SEMICOLON = intern(';')
 LESS = intern('<')
+DOUBLE_LESS = intern('<<')
 LESS_EQUALS = intern('<=')
 EQUALS = intern('=')
 DOUBLE_EQUALS = intern('==')
 EXCLAMATION_EQUALS = intern('!=')
 GREATER = intern('>')
+DOUBLE_GREATER = intern('>>')
 GREATER_EQUALS = intern('>=')
 #QUESTION_MARK = intern('?')
 #AT = intern('@')
@@ -356,7 +358,10 @@ class Tokenizer:
                 self.tokens.append(token.SEMICOLON)
                 pos += 1
             elif ch == '<':
-                if pos + 1 < len(data) and data[pos + 1] == '=':
+                if pos + 1 < len(data) and data[pos + 1] == '<':
+                    self.tokens.append(token.DOUBLE_LESS)
+                    pos += 2
+                elif pos + 1 < len(data) and data[pos + 1] == '=':
                     self.tokens.append(token.LESS_EQUALS)
                     pos += 2
                 else:
@@ -370,7 +375,10 @@ class Tokenizer:
                     self.tokens.append(token.EQUALS)
                     pos += 1
             elif ch == '>':
-                if pos + 1 < len(data) and data[pos + 1] == '=':
+                if pos + 1 < len(data) and data[pos + 1] == '>':
+                    self.tokens.append(token.DOUBLE_GREATER)
+                    pos += 2
+                elif pos + 1 < len(data) and data[pos + 1] == '=':
                     self.tokens.append(token.GREATER_EQUALS)
                     pos += 2
                 else:

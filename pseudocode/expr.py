@@ -390,7 +390,7 @@ operators = [
     [token.rw['AND']],
     [token.DOUBLE_EQUALS, token.EXCLAMATION_EQUALS],
     [token.LESS, token.LESS_EQUALS, token.GREATER, token.GREATER_EQUALS],
-    [token.COLON],
+    [token.DOUBLE_LESS, token.DOUBLE_GREATER, token.COLON],
     [token.PLUS, token.HYPHEN],
     [token.ASTERISK, token.SLASH, token.rw['DIV'], token.rw['MOD']],
     [token.CARET],
