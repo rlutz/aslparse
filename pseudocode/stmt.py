@@ -321,22 +321,20 @@ def parse_statement(ts):
             raise ParseError(ts)
         return stmt.ConstantAssignment(datatype, lhs, expression)
 
-    # TODO: detect dtype.Compound and dtype.Custom
-    if ts.peek() == token.rw['bit'] or \
-       ts.peek() == token.rw['bits'] or \
-       ts.peek() == token.rw['boolean'] or \
-       ts.peek() == token.rw['integer'] or \
-       (isinstance(ts.peek(), token.LinkedIdentifier)
-            and ts.pos + 1 < ts.stop
-            and isinstance(ts.tokens[ts.pos + 1], token.Identifier)):
-        datatype = dtype.parse(ts)
-        lhs = expr.parse_assignable(ts)
-        if ts.consume_if(token.EQUALS):
-            expression = expr.parse_ternary(ts)
+    sub_ts = ts.fork()
+    try:
+        datatype = dtype.parse(sub_ts)
+        lhs = expr.parse_assignable(sub_ts)
+        if sub_ts.consume_if(token.EQUALS):
+            expression = expr.parse_ternary(sub_ts)
         else:
             expression = None
-        if ts.consume() != token.SEMICOLON:
-            raise ParseError(ts)
+        if sub_ts.consume() != token.SEMICOLON:
+            raise ParseError(sub_ts)
+    except ParseError:
+        ts.abandon(sub_ts)
+    else:
+        ts.become(sub_ts)
         return stmt.Declaration(datatype, lhs, expression)
 
 
