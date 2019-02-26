@@ -182,15 +182,25 @@ class Tokenizer:
                 self.tokens.append(t)
                 pos += n
             elif ch == '\n':
+                pos += 1
                 if self.parentheses:
-                    pos += 1
                     continue
-                while pos + 1 < len(data) and data[pos + 1] == '\n':
-                    pos += 1
+                # skip empty and comment-only lines
+                while True:
+                    if pos < len(data) and data[pos] == '\n':
+                        pos += 1
+                        continue
+                    try:
+                        p = data.index('//', pos)
+                    except ValueError:
+                        break
+                    if data[pos:p] != ' ' * (p - pos):
+                        break
+                    pos = data.index('\n', pos)
                 indent = 0
-                while data.startswith('    ', pos + 1 + indent * 4):
+                while data.startswith('    ', pos + indent * 4):
                     indent += 1
-                pos += 1 + indent * 4
+                pos += indent * 4
                 # ignore irregular line break inside 'if' condition
                 t = None
                 for t in reversed(self.tokens):
