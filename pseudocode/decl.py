@@ -20,11 +20,15 @@ class Function:
                            for pt, pi in self.parameters)
 
         if self.functype == SETTER:
-            print indent + '%s[%s] = %s %s%s' % (
+            if params:
+                params = '[%s]' % params
+            print indent + '%s%s = %s %s%s' % (
                 name, params, str(self.result_type), str(self.result_name),
                 ';' if self.body is None else '')
         elif self.functype == GETTER:
-            print indent + '%s %s[%s]%s' % (
+            if params:
+                params = '[%s]' % params
+            print indent + '%s %s%s%s' % (
                 str(self.result_type), name, params,
                 ';' if self.body is None else '')
         else:
@@ -90,8 +94,9 @@ def parse_name(ts):
             break
         if not isinstance(name[-1], token.Identifier):
             raise ParseError(ts)
-        if ts.consume() != token.PERIOD:
-            raise ParseError(ts)
+        if not ts.consume_if(token.PERIOD):
+            overload = True
+            break
     return name, overload
 
 def parse(ts):
@@ -169,27 +174,29 @@ def parse(ts):
     if ts.consume_if(token.OPAREN):
         expected_closing = token.CPAREN
         functype = FUNCTION
-    elif ts.consume_if(token.OBRACKET):
-        expected_closing = token.CBRACKET
+    else:
+        if ts.consume_if(token.OBRACKET):
+            expected_closing = token.CBRACKET
+        else:
+            expected_closing = None
         if result_type == dtype.dt_void:
             functype = SETTER
         else:
             functype = GETTER
-    else:
-        raise ParseError(ts)
     parameters = []
-    if ts.peek() != expected_closing:
-        while True:
-            param_type = dtype.parse(ts)
-            t = ts.consume()
-            if not isinstance(t, token.Identifier) and \
-               not isinstance(t, token.LinkedIdentifier):
-                raise ParseError(ts)
-            parameters.append((param_type, t))
-            if not ts.consume_if(token.COMMA):
-                break
-    if ts.consume() != expected_closing:
-        raise ParseError(ts)
+    if expected_closing is not None:
+        if ts.peek() != token.CPAREN:
+            while True:
+                param_type = dtype.parse(ts)
+                t = ts.consume()
+                if not isinstance(t, token.Identifier) and \
+                   not isinstance(t, token.LinkedIdentifier):
+                    raise ParseError(ts)
+                parameters.append((param_type, t))
+                if not ts.consume_if(token.COMMA):
+                    break
+        if ts.consume() != expected_closing:
+            raise ParseError(ts)
     if functype == SETTER:
         if ts.consume() != token.EQUALS:
             raise ParseError(ts)
