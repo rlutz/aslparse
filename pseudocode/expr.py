@@ -361,10 +361,13 @@ def parse_operand(ts):
 
 # Potentially: '~', '-', type casts
 
+unary_operators = [token.EXCLAMATION_MARK, token.HYPHEN]
+
 def parse_unary(ts):
-    if ts.consume_if(token.EXCLAMATION_MARK):
+    if ts.peek() in unary_operators:
+        operator = ts.consume()
         expression = expr.parse_unary(ts)
-        return expr.Unary(expression, token.EXCLAMATION_MARK)
+        return expr.Unary(expression, operator)
 
     return expr.parse_operand(ts)
 
