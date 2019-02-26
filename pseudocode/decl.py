@@ -62,6 +62,22 @@ class Enumeration:
 
 # declaration :== datatype decl-identifier '(' maybe-parameter-list ')' body
 
+def parse_name(ts):
+    name = []
+    while True:
+        name.append(ts.consume())
+        if isinstance(name[-1], token.DeclarationIdentifier):
+            overload = False
+            break
+        if isinstance(name[-1], token.LinkedIdentifier):
+            overload = True
+            break
+        if not isinstance(name[-1], token.Identifier):
+            raise ParseError(ts)
+        if ts.consume() != token.PERIOD:
+            raise ParseError(ts)
+    return name, overload
+
 def parse(ts):
     if ts.consume_if(token.rw['constant']):
         datatype = dtype.parse(ts)
@@ -102,27 +118,17 @@ def parse(ts):
         return decl.Enumeration(name, values)
 
 
-    if (isinstance(ts.peek(), token.Identifier) or
-        isinstance(ts.peek(), token.DeclarationIdentifier)) and \
-          ts.pos + 1 < ts.stop and (ts.tokens[ts.pos + 1] == token.PERIOD or
-                                    ts.tokens[ts.pos + 1] == token.OPAREN or
-                                    ts.tokens[ts.pos + 1] == token.OBRACKET):
+    sub_ts = ts.fork()
+    try:
+        result_type = dtype.parse(sub_ts)
+        name, overload = parse_name(sub_ts)
+    except ParseError:
+        ts.abandon(sub_ts)
         result_type = dtype.dt_void
+        name, overload = parse_name(ts)
     else:
-        result_type = dtype.parse(ts)
-    name = []
-    while True:
-        name.append(ts.consume())
-        if isinstance(name[-1], token.DeclarationIdentifier):
-            overload = False
-            break
-        if isinstance(name[-1], token.LinkedIdentifier):
-            overload = True
-            break
-        if not isinstance(name[-1], token.Identifier):
-            raise ParseError(ts)
-        if ts.consume() != token.PERIOD:
-            raise ParseError(ts)
+        ts.become(sub_ts)
+
     if ts.consume_if(token.OPAREN):
         expected_closing = token.CPAREN
         functype = FUNCTION

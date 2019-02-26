@@ -28,11 +28,11 @@ class Compound:
         return '(' + ', '.join(str(t) for t in self.partial_types) + ')'
 
 class Custom:
-    def __init__(self, identifier):
-        self.identifier = identifier
+    def __init__(self, name):
+        self.name = name
 
     def __str__(self):
-        return str(self.identifier)
+        return '.'.join(str(part) for part in self.name)
 
 class Void:
     def __str__(self):
@@ -79,8 +79,13 @@ def parse(ts):
             raise ParseError(ts)
         return dtype.Compound(partial_types)
 
-    if isinstance(ts.peek(), token.Identifier) or \
-       isinstance(ts.peek(), token.LinkedIdentifier):
-        return dtype.Custom(ts.consume())
-
-    raise ParseError(ts)
+    name = []
+    while True:
+        name.append(ts.consume())
+        if not isinstance(name[-1], token.Identifier) and \
+           not isinstance(name[-1], token.LinkedIdentifier):
+            raise ParseError(ts)
+        if isinstance(name[-1], token.LinkedIdentifier) or \
+           not ts.consume_if(token.PERIOD):
+            break
+    return dtype.Custom(name)
