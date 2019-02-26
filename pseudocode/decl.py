@@ -66,8 +66,9 @@ class Enumeration:
         self.values = values
 
     def __print__(self, indent):
-        print indent + 'enumeration %s {%s};' % (
-            self.name, ', '.join(str(value) for value in self.values))
+        print indent + 'enumeration %s {%s\n};' % (
+            self.name, ','.join('\n' + indent + '    ' + str(value)
+                                for value in self.values))
 
 class Type:
     def __init__(self, name, fields):
