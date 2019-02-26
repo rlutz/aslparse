@@ -131,8 +131,11 @@ class ImplementationDefined:
         self.aspect = aspect
 
     def __str__(self):
-        return str(self.datatype) + \
-            ' IMPLEMENTATION_DEFINED "%s"' % self.aspect
+        if self.aspect is None:
+            return str(self.datatype) + ' IMPLEMENTATION_DEFINED'
+        else:
+            return str(self.datatype) + \
+                ' IMPLEMENTATION_DEFINED "%s"' % self.aspect
 
 
 # bitspec :== expression2                  (+, -, *, / only)
@@ -293,34 +296,41 @@ def parse_operand(ts):
         if ts.consume() != token.CBRACE:
             raise ParseError(ts)
         return expr.Set(members)
-    elif t == token.rw['bit'] or \
-         t == token.rw['bits'] or \
-         t == token.rw['boolean'] or \
-         t == token.rw['integer']:
-        datatype = dtype.parse(ts)
 
-        if ts.consume_if(token.rw['UNKNOWN']):
-            return expr.Unknown(datatype)
-        if ts.consume_if(token.rw['IMPLEMENTATION_DEFINED']):
-            s = ts.consume()
-            if not isinstance(s, token.String):
-                raise ParseError(ts)
-            return expr.ImplementationDefined(datatype, s.data)
-    else:
-        expression = parse_assignable(ts)
-        if ts.consume_if(token.OPAREN):
-            if ts.peek() != token.CPAREN:
-                args = expr.parse_list(ts)
+
+    sub_ts = ts.fork()
+    try:
+        datatype = dtype.parse(sub_ts)
+        if sub_ts.consume_if(token.rw['UNKNOWN']):
+            expression = expr.Unknown(datatype)
+        elif sub_ts.consume_if(token.rw['IMPLEMENTATION_DEFINED']):
+            if isinstance(sub_ts.peek(), token.String):
+                aspect = sub_ts.consume().data
             else:
-                args = []
-            if ts.consume() != token.CPAREN:
-                raise ParseError(ts)
-            expression = expr.Arguments(expression, '()', args)
-        if ts.peek() == token.LESS:
-            args = expr.parse_bitspec_clause(ts)
-            if args is not None:
-                expression = expr.Arguments(expression, '<>', args)
+                aspect = None
+            expression = expr.ImplementationDefined(datatype, aspect)
+        else:
+            raise ParseError(sub_ts)
+    except ParseError:
+        ts.abandon(sub_ts)
+    else:
+        ts.become(sub_ts)
         return expression
+
+    expression = parse_assignable(ts)
+    if ts.consume_if(token.OPAREN):
+        if ts.peek() != token.CPAREN:
+            args = expr.parse_list(ts)
+        else:
+            args = []
+        if ts.consume() != token.CPAREN:
+            raise ParseError(ts)
+        expression = expr.Arguments(expression, '()', args)
+    if ts.peek() == token.LESS:
+        args = expr.parse_bitspec_clause(ts)
+        if args is not None:
+            expression = expr.Arguments(expression, '<>', args)
+    return expression
 
 
 # expression1 :== expression0
