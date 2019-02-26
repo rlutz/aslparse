@@ -56,6 +56,22 @@ class Enumeration:
         print indent + 'enumeration %s {%s};' % (
             self.name, ', '.join(str(value) for value in self.values))
 
+class Type:
+    def __init__(self, name, fields):
+        self.name = name
+        self.fields = fields
+
+    def __print__(self, indent):
+        print indent + 'type ' + '.'.join(str(part) for part in self.name) \
+            + ' is ('
+        for i, field in enumerate(self.fields):
+            field_type, field_identifier = field
+            print indent + '    %s %s%s' % (
+                str(field_type),
+                str(field_identifier),
+                ',' if i != len(self.fields) - 1 else '')
+        print indent + ')'
+
 # parameter :== datatype identifier
 # parameter-list :== parameter | parameter-list ',' parameter
 # maybe-parameter-list :== <empty> | parameter-list
@@ -116,6 +132,27 @@ def parse(ts):
         if ts.consume() != token.SEMICOLON:
             raise ParseError(ts)
         return decl.Enumeration(name, values)
+
+    if ts.consume_if(token.rw['type']):
+        name, overload = parse_name(ts)
+        if overload:
+            raise ParseError(ts)
+        if ts.consume() != token.rw['is']:
+            raise ParseError(ts)
+        if ts.consume() != token.OPAREN:
+            raise ParseError(ts)
+        fields = []
+        while True:
+            field_type = dtype.parse(ts)
+            t = ts.consume()
+            if not isinstance(t, token.Identifier):
+                raise ParseError(ts)
+            fields.append((field_type, t))
+            if not ts.consume_if(token.COMMA):
+                break
+        if ts.consume() != token.CPAREN:
+            raise ParseError(ts)
+        return decl.Type(name, fields)
 
 
     sub_ts = ts.fork()

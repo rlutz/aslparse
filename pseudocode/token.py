@@ -137,6 +137,7 @@ for s in ['AND',
           'for',
           'if',
           'integer',
+          'is',
           'of',
           'otherwise',
           'return',
@@ -145,6 +146,10 @@ for s in ['AND',
           'when']:
     s = intern(s)
     rw[s] = token.intern_token(s, token.ReservedWord)
+
+# 'type' is a reserved word but can also be used as an identifier
+s = intern('type')
+rw[s] = token.intern_token(s, token.Identifier)
 
 
 class Tokenizer:

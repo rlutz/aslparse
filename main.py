@@ -91,7 +91,9 @@ class Fragment:
 
         try:
           if (tokens[-1] == token.NEWLINE and
-              tokens[-2] == token.SEMICOLON) or isinstance(tokens[-1], list):
+              tokens[-2] == token.SEMICOLON) \
+                  or isinstance(tokens[-1], list) \
+                  or tokens[0] == token.rw['type']:
             body = stmt.parse_block(tokens, decl.parse)
             print
             for statement in body:

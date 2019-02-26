@@ -359,6 +359,8 @@ def parse_block(tokens, parse_func):
                 break
 
             if pos == len(tokens):
+                if tokens[0] == token.rw['type']:
+                    break
                 raise ParseError(tstream.TokenStream(tokens, pos, pos))
 
             if t == token.SEMICOLON:
