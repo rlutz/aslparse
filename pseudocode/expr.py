@@ -403,7 +403,7 @@ def parse_ternary(ts):
         arg0 = expr.parse_binary(ts)
         if ts.consume() != token.rw['else']:
             raise ParseError(ts)
-        arg1 = expr.parse_binary(ts)
+        arg1 = expr.parse_ternary(ts)
         return expr.Ternary(condition, arg0, arg1)
 
     return expr.parse_binary(ts)
