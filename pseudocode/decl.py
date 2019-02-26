@@ -29,6 +29,15 @@ class Constant:
             str(self.datatype), '.'.join(str(part) for part in self.name),
             str(self.expression))
 
+class Enumeration:
+    def __init__(self, name, values):
+        self.name = name
+        self.values = values
+
+    def __print__(self, indent):
+        print indent + 'enumeration %s {%s};' % (
+            self.name, ', '.join(str(value) for value in self.values))
+
 # parameter :== datatype identifier
 # parameter-list :== parameter | parameter-list ',' parameter
 # maybe-parameter-list :== <empty> | parameter-list
@@ -53,6 +62,26 @@ def parse(ts):
         if ts.consume() != token.SEMICOLON:
             raise ParseError(ts)
         return decl.Constant(datatype, name, expression)
+
+    if ts.consume_if(token.rw['enumeration']):
+        name = ts.consume()
+        if not isinstance(name, token.DeclarationIdentifier):
+            raise ParseError(ts)
+        if ts.consume() != token.OBRACE:
+            raise ParseError(ts)
+        values = []
+        while True:
+            value = ts.consume()
+            if not isinstance(value, token.DeclarationIdentifier):
+                raise ParseError(ts)
+            values.append(value)
+            if not ts.consume_if(token.COMMA):
+                break
+        if ts.consume() != token.CBRACE:
+            raise ParseError(ts)
+        if ts.consume() != token.SEMICOLON:
+            raise ParseError(ts)
+        return decl.Enumeration(name, values)
 
 
     if (isinstance(ts.peek(), token.Identifier) or
