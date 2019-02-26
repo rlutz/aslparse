@@ -9,11 +9,13 @@ class Function:
         self.body = body
 
     def __print__(self, indent):
-        print indent + '%s %s(%s)' % (
+        print indent + '%s %s(%s)%s' % (
             str(self.datatype), '.'.join(str(part) for part in self.name),
-            ', '.join(str(pt) + ' ' + str(pi) for pt, pi in self.parameters))
-        for statement in self.body:
-            statement.__print__(indent + '    ')
+            ', '.join(str(pt) + ' ' + str(pi) for pt, pi in self.parameters),
+            ';' if self.body is None else '')
+        if self.body is not None:
+            for statement in self.body:
+                statement.__print__(indent + '    ')
 
 class Constant:
     def __init__(self, datatype, name, expression):
@@ -83,5 +85,10 @@ def parse(ts):
                 break
     if ts.consume() != token.CPAREN:
         raise ParseError(ts)
-    body = stmt.parse_body(ts)
+    if ts.consume_if(token.SEMICOLON):
+        body = None
+    elif isinstance(ts.peek(), list):
+        body = stmt.parse_block(ts.consume(), stmt.parse_statement)
+    else:
+        raise ParseError(ts)
     return decl.Function(datatype, name, parameters, body)
