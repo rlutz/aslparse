@@ -18,6 +18,7 @@ PLUS = intern('+')
 COMMA = intern(',')
 HYPHEN = intern('-')
 PERIOD = intern('.')
+DOUBLE_PERIOD = intern('..')
 SLASH = intern('/')
 COLON = intern(':')
 SEMICOLON = intern(';')
@@ -125,6 +126,7 @@ for s in ['AND',
           'UNDEFINED',
           'UNKNOWN',
           'UNPREDICTABLE',
+          'array',
           'assert',
           'bit',
           'bits',
@@ -272,8 +274,12 @@ class Tokenizer:
                 pos += 1
             elif ch == '.' and (pos + 1 == len(data) or not (
                     data[pos + 1] >= '0' and data[pos + 1] <= '9')):
-                self.tokens.append(token.PERIOD)
-                pos += 1
+                if pos + 1 < len(data) and data[pos + 1] == '.':
+                    self.tokens.append(token.DOUBLE_PERIOD)
+                    pos += 2
+                else:
+                    self.tokens.append(token.PERIOD)
+                    pos += 1
             elif ch == '/':
                 if pos + 1 < len(data) and data[pos + 1] == '/':
                     try:
@@ -303,6 +309,9 @@ class Tokenizer:
                     while pos + n < len(data):
                         ch = data[pos + n]
                         if not (ch >= '0' and ch <= '9' or ch == '.'):
+                            break
+                        if ch == '.' and pos + n + 1 < len(data) \
+                                     and data[pos + n + 1] == '.':
                             break
                         n += 1
                     self.tokens.append(token.intern_token(

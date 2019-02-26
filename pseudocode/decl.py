@@ -51,6 +51,15 @@ class Constant:
             str(self.datatype), '.'.join(str(part) for part in self.name),
             str(self.expression))
 
+class Array:
+    def __init__(self, datatype, name):
+        self.datatype = datatype
+        self.name = name
+
+    def __print__(self, indent):
+        print indent + '%s %s;' % (
+            str(self.datatype), '.'.join(str(part) for part in self.name))
+
 class Enumeration:
     def __init__(self, name, values):
         self.name = name
@@ -158,6 +167,27 @@ def parse(ts):
         if ts.consume() != token.CPAREN:
             raise ParseError(ts)
         return decl.Type(name, fields)
+
+    if ts.consume_if(token.rw['array']):
+        base_type = dtype.parse(ts)
+        name = []
+        while True:
+            name.append(ts.consume())
+            if not isinstance(name[-1], token.Identifier):
+                raise ParseError(ts)
+            if not ts.consume_if(token.PERIOD):
+                break
+        if ts.consume() != token.OBRACKET:
+            raise ParseError(ts)
+        start = expr.parse_binary(ts)
+        if ts.consume() != token.DOUBLE_PERIOD:
+            raise ParseError(ts)
+        stop = expr.parse_binary(ts)
+        if ts.consume() != token.CBRACKET:
+            raise ParseError(ts)
+        if ts.consume() != token.SEMICOLON:
+            raise ParseError(ts)
+        return decl.Array(dtype.Array(base_type, start, stop), name)
 
 
     sub_ts = ts.fork()

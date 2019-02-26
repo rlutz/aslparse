@@ -38,6 +38,16 @@ class Void:
     def __str__(self):
         return 'void'
 
+class Array:
+    def __init__(self, base, start, stop):
+        self.base = base
+        self.start = start
+        self.stop = stop
+
+    def __str__(self):
+        return 'array[%s..%s] %s' % (str(self.start), str(self.stop),
+                                     str(self.base))
+
 dt_bit = dtype.Bit()
 dt_boolean = dtype.Boolean()
 dt_integer = dtype.Integer()
