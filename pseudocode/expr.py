@@ -52,11 +52,14 @@ class Unary:
         self.operator = operator
 
     def __str__(self):
+        op = str(self.operator)
+        if isinstance(self.operator, token.ReservedWord):
+            op = op + ' '
+        arg = str(self.arg)
         if isinstance(self.arg, expr.Ternary) or \
            isinstance(self.arg, expr.Operator):
-            return '%s(%s)' % (str(self.operator), str(self.arg))
-        else:
-            return '%s%s' % (str(self.operator), str(self.arg))
+            arg = '(%s)' % arg
+        return op + arg
 
 class Operator:
     def __init__(self, arg0, arg1, operator, precedence):
@@ -361,7 +364,7 @@ def parse_operand(ts):
 
 # Potentially: '~', '-', type casts
 
-unary_operators = [token.EXCLAMATION_MARK, token.HYPHEN]
+unary_operators = [token.EXCLAMATION_MARK, token.HYPHEN, token.rw['NOT']]
 
 def parse_unary(ts):
     if ts.peek() in unary_operators:
