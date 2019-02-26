@@ -96,6 +96,17 @@ class For:
         for statement in self.body:
             statement.__print__(indent + '    ')
 
+class Repeat:
+    def __init__(self, body, condition):
+        self.body = body
+        self.condition = condition
+
+    def __print__(self, indent):
+        print indent + 'repeat'
+        for statement in self.body:
+            statement.__print__(indent + '    ')
+        print indent + 'until %s;' % str(self.condition)
+
 class Case:
     def __init__(self, expression, clauses):
         self.expression = expression
@@ -246,6 +257,17 @@ def parse_statement(ts):
         body = stmt.parse_body(ts)
         return stmt.For(var, start, stop, body)
 
+    if ts.consume_if(token.rw['repeat']):
+        if not isinstance(ts.peek(), list):
+            raise ParseError(ts)
+        body = stmt.parse_block(ts.consume(), stmt.parse_statement)
+        if ts.consume() != token.rw['until']:
+            raise ParseError(ts)
+        condition = expr.parse_binary(ts)
+        if ts.consume() != token.SEMICOLON:
+            raise ParseError(ts)
+        return stmt.Repeat(body, condition)
+
     if ts.consume_if(token.rw['case']):
         expression = expr.parse_binary(ts)
         if ts.consume() != token.rw['of']:
@@ -354,7 +376,8 @@ def parse_block(tokens, parse_func):
 
             if isinstance(t, list):
                 if pos < len(tokens) and (tokens[pos] == token.rw['elsif'] or
-                                          tokens[pos] == token.rw['else']):
+                                          tokens[pos] == token.rw['else'] or
+                                          tokens[pos] == token.rw['until']):
                     continue
                 break
 
@@ -375,7 +398,8 @@ def parse_block(tokens, parse_func):
                     pos += 1
 
                 if pos < len(tokens) and (tokens[pos] == token.rw['elsif'] or
-                                          tokens[pos] == token.rw['else']):
+                                          tokens[pos] == token.rw['else'] or
+                                          tokens[pos] == token.rw['until']):
                     continue
                 break
 

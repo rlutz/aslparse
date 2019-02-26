@@ -143,9 +143,11 @@ for s in ['AND',
           'is',
           'of',
           'otherwise',
+          'repeat',
           'return',
           'then',
           'to',
+          'until',
           'when']:
     s = intern(s)
     rw[s] = token.intern_token(s, token.ReservedWord)
