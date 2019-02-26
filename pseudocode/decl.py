@@ -216,6 +216,15 @@ def parse(ts):
         return decl.Array(dtype.Array(base_type, start, stop), name)
 
 
+    if isinstance(ts.peek(), token.DeclarationIdentifier) and \
+       ts.peek().name == 'ElemP':
+        ts.pos = ts.stop
+        class Dummy:
+            def __print__(self, indent):
+                print indent + '// skipping ElemP setter'
+        return Dummy()
+
+
     sub_ts = ts.fork()
     try:
         result_type = dtype.parse(sub_ts)

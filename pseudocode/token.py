@@ -8,7 +8,7 @@ EXCLAMATION_MARK = intern('!')
 #HASH = intern('#')
 #DOLLAR = intern('$')
 #PERCENT = intern('%')
-#AMPERSAND = intern('&')
+AMPERSAND = intern('&')
 DOUBLE_AMPERSAND = intern('&&')
 # '\'': bit vector # APOSTROPHE
 OPAREN = intern('(')
