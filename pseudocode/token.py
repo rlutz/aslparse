@@ -388,6 +388,7 @@ class Tokenizer:
                 raise LexError(data, pos)
             elif ch == '{':
                 self.tokens.append(token.OBRACE)
+                self.parentheses.append('{}')
                 pos += 1
             elif ch == '|':
                 if pos + 1 < len(data) and data[pos + 1] == '|':
@@ -397,6 +398,8 @@ class Tokenizer:
                     self.tokens.append(token.VBAR)
                     pos += 1
             elif ch == '}':
+                if not self.parentheses or self.parentheses.pop() != '{}':
+                    raise LexError(data, pos)
                 self.tokens.append(token.CBRACE)
                 pos += 1
             elif ch == '~':
