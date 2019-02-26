@@ -2,9 +2,10 @@ import token, expr, stmt, dtype, decl
 from . import ParseError
 
 class Function:
-    def __init__(self, datatype, name, parameters, body):
+    def __init__(self, datatype, name, overload, parameters, body):
         self.datatype = datatype
         self.name = name
+        self.overload = overload
         self.parameters = parameters
         self.body = body
 
@@ -65,6 +66,10 @@ def parse(ts):
     while True:
         name.append(ts.consume())
         if isinstance(name[-1], token.DeclarationIdentifier):
+            overload = False
+            break
+        if isinstance(name[-1], token.LinkedIdentifier):
+            overload = True
             break
         if not isinstance(name[-1], token.Identifier):
             raise ParseError(ts)
@@ -91,4 +96,4 @@ def parse(ts):
         body = stmt.parse_block(ts.consume(), stmt.parse_statement)
     else:
         raise ParseError(ts)
-    return decl.Function(datatype, name, parameters, body)
+    return decl.Function(datatype, name, overload, parameters, body)
