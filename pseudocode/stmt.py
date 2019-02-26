@@ -207,8 +207,9 @@ def parse_case_clause(ts):
             if ts.maybe_peek() is None:
                 break
 
-    if patterns is None and (
-            ts.stop != len(ts.tokens) - 1 or ts.tokens[-1] != token.NEWLINE):
+    if patterns is None and not (
+            ts.stop == len(ts.tokens) or
+            ts.stop == len(ts.tokens) - 1 and ts.tokens[-1] == token.NEWLINE):
         raise ParseError(ts)
     return stmt.CaseClause(patterns, body)
 
