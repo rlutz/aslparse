@@ -157,10 +157,14 @@ def parse_if_segment(ts):
 
     then_body = stmt.parse_body(ts)
 
+    consumed_nl = ts.consume_if(token.NEWLINE)
+
     if ts.consume_if(token.rw['elsif']):
         else_body = [parse_if_segment(ts)]
     elif ts.consume_if(token.rw['else']):
         else_body = stmt.parse_body(ts)
+    elif consumed_nl:
+        raise ParseError(ts)
     else:
         else_body = []
 
@@ -192,8 +196,17 @@ def parse_case_clause(ts):
     else:
         raise ParseError(ts)
 
-    body = stmt.parse_body(ts)
-    if patterns is None and ts.end != len(ts.tokens):
+    if isinstance(ts.peek(), list):
+        body = stmt.parse_block(ts.consume(), stmt.parse_statement)
+    else:
+        body = []
+        while True:
+            body.append(stmt.parse_statement(ts))
+            if ts.maybe_peek() is None:
+                break
+
+    if patterns is None and (
+            ts.stop != len(ts.tokens) - 1 or ts.tokens[-1] != token.NEWLINE):
         raise ParseError(ts)
     return stmt.CaseClause(patterns, body)
 
@@ -332,16 +345,36 @@ def parse_block(tokens, parse_func):
         while True:
             t = tokens[pos]
             pos += 1
-            if t == token.SEMICOLON or isinstance(t, list):
-                if pos == len(tokens):
-                    break
-                t = tokens[pos]
-                if t != token.rw['elsif'] and t != token.rw['else']:
-                    break
-            if pos == len(tokens):
-                raise ParseError(None)
 
-        statements.append(tstream.parse(tokens, start, pos, parse_func))
+            if isinstance(t, list):
+                if pos < len(tokens) and (tokens[pos] == token.rw['elsif'] or
+                                          tokens[pos] == token.rw['else']):
+                    continue
+                break
+
+            if pos == len(tokens):
+                raise ParseError(tstream.TokenStream(tokens, pos, pos))
+
+            if t == token.SEMICOLON:
+                if tokens[start] == token.rw['when'] or \
+                   tokens[start] == token.rw['otherwise']:
+                    if tokens[pos] == token.NEWLINE:
+                        pos += 1
+                        break
+                    continue
+
+                if tokens[pos] == token.NEWLINE:
+                    pos += 1
+
+                if pos < len(tokens) and (tokens[pos] == token.rw['elsif'] or
+                                          tokens[pos] == token.rw['else']):
+                    continue
+                break
+
+        if tokens[pos - 1] == token.NEWLINE:
+            statements.append(tstream.parse(tokens, start, pos - 1, parse_func))
+        else:
+            statements.append(tstream.parse(tokens, start, pos, parse_func))
         start = pos
 
     return statements

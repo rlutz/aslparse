@@ -1,7 +1,8 @@
 import token
 from . import LexError
 
-# '\t', '\n', '\r', ' ': whitespace
+NEWLINE = intern('\\n')
+# '\t', '\r', ' ': whitespace
 EXCLAMATION_MARK = intern('!')
 #QUOTATION_MARK = intern('"')
 #HASH = intern('#')
@@ -189,6 +190,10 @@ class Tokenizer:
                     if t == token.rw['if']:
                         continue
                     raise LexError(data, pos)
+                if len(self.stack) >= indent and self.tokens \
+                      and self.tokens[-1] != token.NEWLINE \
+                      and not isinstance(self.tokens[-1], list):
+                    self.tokens.append(token.NEWLINE)
                 while len(self.stack) < indent:
                     self.stack.append(self.tokens)
                     indented_tokens = []
@@ -400,5 +405,10 @@ class Tokenizer:
                                               token.DeclarationIdentifier))
 
     def process_end(self):
+        if self.tokens \
+              and self.tokens[-1] != token.NEWLINE \
+              and not isinstance(self.tokens[-1], list):
+            self.tokens.append(token.NEWLINE)
+
         while self.stack:
             self.tokens = self.stack.pop()

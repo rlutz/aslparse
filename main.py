@@ -90,14 +90,16 @@ class Fragment:
         tokens = self.tokenizer.tokens
 
         try:
-          if tokens[-1] == token.SEMICOLON or isinstance(tokens[-1], list):
+          if (tokens[-1] == token.NEWLINE and
+              tokens[-2] == token.SEMICOLON) or isinstance(tokens[-1], list):
             body = stmt.parse_block(tokens, decl.parse)
             print
             for statement in body:
                 statement.__print__('')
             print
           else:
-            expression = tstream.parse(tokens, 0, len(tokens),
+            assert tokens[-1] == token.NEWLINE
+            expression = tstream.parse(tokens, 0, len(tokens) - 1,
                                        expr.parse_ternary)
             print
             print str(expression)
