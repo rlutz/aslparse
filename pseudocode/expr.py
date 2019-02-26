@@ -150,12 +150,12 @@ def parse_bitspec_clause(ts):
         if sub_ts.consume() != token.LESS:
             raise ParseError(sub_ts)
         while True:
-            arg = expr.parse_binary(sub_ts, len(operators) - 2)
+            arg = expr.parse_binary(sub_ts, len(operators) - 3)
             if sub_ts.consume_if(token.COLON):
-                arg1 = expr.parse_binary(sub_ts, len(operators) - 2)
+                arg1 = expr.parse_binary(sub_ts, len(operators) - 3)
                 args.append((arg, token.COLON, arg1))
             elif sub_ts.consume_if(token.PLUS_COLON):
-                arg1 = expr.parse_binary(sub_ts, len(operators) - 2)
+                arg1 = expr.parse_binary(sub_ts, len(operators) - 3)
                 args.append((arg, token.PLUS_COLON, arg1))
             else:
                 args.append(arg)
@@ -364,6 +364,7 @@ operators = [
     [token.COLON],
     [token.PLUS, token.HYPHEN],
     [token.ASTERISK, token.SLASH, token.rw['DIV'], token.rw['MOD']],
+    [token.CARET],
 ]
 
 def parse_binary(ts, precedence_limit = 0):

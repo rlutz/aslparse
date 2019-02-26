@@ -35,7 +35,7 @@ GREATER_EQUALS = intern('>=')
 OBRACKET = intern('[')
 #DOUBLE_BACKSLASH = intern('\\')
 CBRACKET = intern(']')
-#CARET = intern('^')
+CARET = intern('^')
 #UNDERSCORE = intern('_')
 #BACKTICK = intern('`')
 OBRACE = intern('{')
@@ -382,7 +382,8 @@ class Tokenizer:
                 self.tokens.append(token.CBRACKET)
                 pos += 1
             elif ch == '^':
-                raise LexError(data, pos)
+                self.tokens.append(token.CARET)
+                pos += 1
             elif ch == '`':
                 raise LexError(data, pos)
             elif ch == '{':
