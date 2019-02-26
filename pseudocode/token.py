@@ -134,6 +134,7 @@ for s in ['AND',
           'boolean',
           'case',
           'constant',
+          'do',
           'else',
           'elsif',
           'enumeration',
@@ -148,7 +149,8 @@ for s in ['AND',
           'then',
           'to',
           'until',
-          'when']:
+          'when',
+          'while']:
     s = intern(s)
     rw[s] = token.intern_token(s, token.ReservedWord)
 

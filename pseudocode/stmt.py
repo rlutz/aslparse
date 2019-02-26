@@ -96,6 +96,16 @@ class For:
         for statement in self.body:
             statement.__print__(indent + '    ')
 
+class While:
+    def __init__(self, condition, body):
+        self.condition = condition
+        self.body = body
+
+    def __print__(self, indent):
+        print indent + 'while %s do' % str(self.condition)
+        for statement in self.body:
+            statement.__print__(indent + '    ')
+
 class Repeat:
     def __init__(self, body, condition):
         self.body = body
@@ -257,6 +267,13 @@ def parse_statement(ts):
         stop = expr.parse_binary(ts)
         body = stmt.parse_body(ts)
         return stmt.For(var, start, stop, body)
+
+    if ts.consume_if(token.rw['while']):
+        condition = expr.parse_binary(ts)
+        if ts.consume() != token.rw['do']:
+            raise ParseError(ts)
+        body = stmt.parse_body(ts)
+        return stmt.While(condition, body)
 
     if ts.consume_if(token.rw['repeat']):
         if not isinstance(ts.peek(), list):
