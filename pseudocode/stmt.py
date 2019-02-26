@@ -240,6 +240,8 @@ def parse_case_clause(ts):
 # statement :== 'if' if-segment
 #             | 'for' identifier '=' expression2 'to' expression2 body
 #             | 'for' identifier '=' expression2 'downto' expression2 body
+#             | 'while' expression2 'do' body
+#             | 'repeat' body 'until' expression2 ';'
 #             | 'case' expression2 'of' BEGIN case-clause-list END
 #             | 'SEE' string ';'
 #             | 'UNDEFINED' ';'
@@ -247,10 +249,10 @@ def parse_case_clause(ts):
 #             | 'assert' expression2 ';'
 #             | 'return' ';'
 #             | 'return' expression2 ';'
-#             | datatype assignable ';'
-#             | datatype assignable '=' expression3 ';'
+#             | datatype identifier-chain ';'
+#             | datatype identifier-chain '=' expression3 ';'
 #             | assignable '=' expression3 ';'
-#             | 'constant' datatype assignable '=' expression3 ';'
+#             | 'constant' datatype identifier-chain '=' expression3 ';'
 #             | identifier-chain '(' maybe-expression-list ')' ';'
 
 def parse_statement(ts):
