@@ -282,6 +282,7 @@ def parse_assignable(ts):
 #               | identifier-chain '(' maybe-expression-list ')'
 #               | identifier-chain '(' maybe-expression-list ')' bitspec-clause
 #               | number
+#               | number bitspec-clause
 #               | bitvector
 #               | '(' expression-list ')'
 #               | '{' maybe-expression-list '}'
@@ -295,7 +296,11 @@ def parse_operand(ts):
     if isinstance(t, token.Number) or \
        isinstance(t, token.HexadecimalNumber):
         ts.consume()
-        return expr.Numeric(t)
+        expression = expr.Numeric(t)
+        if ts.peek() == token.LESS:
+            args = expr.parse_bitspec_clause(ts)
+            expression = expr.Arguments(expression, '<>', args)
+        return expression
     elif isinstance(t, token.Bitvector):
         ts.consume()
         return expr.Numeric(t)
