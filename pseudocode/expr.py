@@ -24,7 +24,7 @@ class Arguments:
 
     def _fmt_arg(self, arg):
         if isinstance(arg, tuple):
-            return '%s:%s' % tuple(str(a) for a in arg)
+            return '%s%s%s' % tuple(str(a) for a in arg)
         else:
             return str(arg)
 
@@ -150,7 +150,10 @@ def parse_bitspec_clause(ts):
             arg = expr.parse_binary(sub_ts, len(operators) - 2)
             if sub_ts.consume_if(token.COLON):
                 arg1 = expr.parse_binary(sub_ts, len(operators) - 2)
-                args.append((arg, arg1))
+                args.append((arg, token.COLON, arg1))
+            elif sub_ts.consume_if(token.PLUS_COLON):
+                arg1 = expr.parse_binary(sub_ts, len(operators) - 2)
+                args.append((arg, token.PLUS_COLON, arg1))
             else:
                 args.append(arg)
             if not sub_ts.consume_if(token.COMMA):

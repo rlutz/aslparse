@@ -15,6 +15,7 @@ OPAREN = intern('(')
 CPAREN = intern(')')
 ASTERISK = intern('*')
 PLUS = intern('+')
+PLUS_COLON = intern('+:')
 COMMA = intern(',')
 HYPHEN = intern('-')
 PERIOD = intern('.')
@@ -264,8 +265,12 @@ class Tokenizer:
                 self.tokens.append(token.ASTERISK)
                 pos += 1
             elif ch == '+':
-                self.tokens.append(token.PLUS)
-                pos += 1
+                if pos + 1 < len(data) and data[pos + 1] == ':':
+                    self.tokens.append(token.PLUS_COLON)
+                    pos += 2
+                else:
+                    self.tokens.append(token.PLUS)
+                    pos += 1
             elif ch == ',':
                 self.tokens.append(token.COMMA)
                 pos += 1
