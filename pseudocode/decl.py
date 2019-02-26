@@ -83,6 +83,10 @@ class Type:
         self.fields = fields
 
     def __print__(self, indent):
+        if self.fields is None:
+            print indent + 'type %s;' % '.'.join(str(part)
+                                                 for part in self.name)
+            return
         print indent + 'type ' + '.'.join(str(part) for part in self.name) \
             + ' is ('
         for i, field in enumerate(self.fields):
@@ -113,6 +117,7 @@ class Type:
 #                     '=' datatype identifier body
 #               | 'constant' datatype identifier-chain '=' expression3 ';'
 #               | 'enumeration' identifier-chain '{' value-list '}' ';'
+#               | 'type' identifier-chain ';'
 #               | 'type' identifier-chain 'is' '(' parameter-list ')'
 #               | 'array' datatype identifier-chain
 #                     '[' expression2 '..' expression2 ']' ';'
@@ -177,6 +182,8 @@ def parse(ts):
         name, overload = parse_name(ts)
         if overload:
             raise ParseError(ts)
+        if ts.consume_if(token.SEMICOLON):
+            return decl.Type(name, None)
         if ts.consume() != token.rw['is']:
             raise ParseError(ts)
         if ts.consume() != token.OPAREN:
