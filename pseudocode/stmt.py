@@ -299,7 +299,10 @@ def parse_statement(ts):
     if ts.peek() == token.rw['bit'] or \
        ts.peek() == token.rw['bits'] or \
        ts.peek() == token.rw['boolean'] or \
-       ts.peek() == token.rw['integer']:
+       ts.peek() == token.rw['integer'] or \
+       (isinstance(ts.peek(), token.LinkedIdentifier)
+            and ts.pos + 1 < ts.stop
+            and isinstance(ts.tokens[ts.pos + 1], token.Identifier)):
         datatype = dtype.parse(ts)
         lhs = expr.parse_assignable(ts)
         if ts.consume_if(token.EQUALS):
