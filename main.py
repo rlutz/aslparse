@@ -76,11 +76,11 @@ class Fragment:
     def end(self):
         try:
             self.tokenizer.process(''.join(self.buf) + '\n')
+            self.tokenizer.process_end()
         except LexError as e:
             e.report()
             sys.exit(1)
         del self.buf[:]
-        self.tokenizer.process_end()
 
         #print '{'
         #for token in self.tokens:

@@ -166,8 +166,13 @@ class Tokenizer:
         self.tokens = []
         self.stack = []
         self.parentheses = []
+        self.inside_string = None
 
     def process(self, data):
+        if self.inside_string is not None:
+            data = self.inside_string + data
+            self.inside_string = None
+
         pos = 0
         while pos < len(data):
             ch = data[pos]
@@ -240,7 +245,8 @@ class Tokenizer:
                 try:
                     n = data.index('"', pos + 1) - pos - 1
                 except ValueError:
-                    raise LexError(data, pos)
+                    self.inside_string = data[pos:]
+                    return
                 if data.find('\n', pos + 1, pos + 1 + n) != -1:
                     raise LexError(data, pos)
                 if data.find('\\', pos + 1, pos + 1 + n) != -1:
@@ -415,6 +421,10 @@ class Tokenizer:
         #print 'Character data: ', repr(data)
 
     def process_a(self, data):
+        if self.inside_string is not None:
+            self.inside_string += data
+            return
+
         parts = data.split('.')
         for part in parts:
             if not part:
@@ -431,6 +441,9 @@ class Tokenizer:
                                               token.LinkedIdentifier))
 
     def process_anchor(self, data):
+        if self.inside_string is not None:
+            raise LexError(self.inside_string, 0)
+
         parts = data.split('.')
         for part in parts:
             if not part:
@@ -447,6 +460,9 @@ class Tokenizer:
                                               token.DeclarationIdentifier))
 
     def process_end(self):
+        if self.inside_string is not None:
+            raise LexError(self.inside_string, 0)
+
         if self.tokens \
               and self.tokens[-1] != token.NEWLINE \
               and not isinstance(self.tokens[-1], list):
