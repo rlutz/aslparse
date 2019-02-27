@@ -246,6 +246,25 @@ def parse(ts):
         name, overload = parse_name(ts)
     else:
         ts.become(sub_ts)
+        if ts.peek() == token.EQUALS or \
+           ts.peek() == token.COMMA or \
+           ts.peek() == token.SEMICOLON:
+            variables = []
+            while True:
+                if variables:
+                    name, overload = parse_name(ts)
+                if not overload:
+                    raise ParseError(ts)
+                if ts.consume_if(token.EQUALS):
+                    expression = expr.parse_ternary(ts)
+                else:
+                    expression = None
+                variables.append((name, expression))
+                if not ts.consume_if(token.COMMA):
+                    break
+            if ts.consume() != token.SEMICOLON:
+                raise ParseError(ts)
+            return decl.Variable(False, result_type, variables)
 
     if ts.consume_if(token.OPAREN):
         expected_closing = token.CPAREN
