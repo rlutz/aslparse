@@ -311,7 +311,12 @@ class Tokenizer:
                     self.tokens.append(token.PERIOD)
                     pos += 1
             elif ch == '/':
-                if pos + 1 < len(data) and data[pos + 1] == '/':
+                if pos + 1 < len(data) and data[pos + 1] == '*':
+                    try:
+                        pos = data.index('*/', pos) + 2
+                    except ValueError:
+                        raise LexError(data, pos)
+                elif pos + 1 < len(data) and data[pos + 1] == '/':
                     try:
                         pos = data.index('\n', pos)
                     except ValueError:
