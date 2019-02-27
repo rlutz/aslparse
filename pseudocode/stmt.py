@@ -256,9 +256,9 @@ def parse_case_clause(ts):
 #             | 'UNDEFINED' ';'
 #             | 'UNPREDICTABLE' ';'
 #             | 'IMPLEMENTATION_DEFINED' string ';'
-#             | 'assert' expression2 ';'
+#             | 'assert' expression3 ';'
 #             | 'return' ';'
-#             | 'return' expression2 ';'
+#             | 'return' expression3 ';'
 #             | datatype variable-def-list ';'
 #             | 'constant' datatype variable-def ';'
 #             | assignable '=' expression3 ';'
@@ -340,7 +340,7 @@ def parse_statement(ts):
         return stmt.ImplementationDefined(aspect)
 
     if ts.consume_if(token.rw['assert']):
-        expression = expr.parse_binary(ts)
+        expression = expr.parse_ternary(ts)
         if ts.consume() != token.SEMICOLON:
             raise ParseError(ts)
         return stmt.Assert(expression)
@@ -349,7 +349,7 @@ def parse_statement(ts):
         if ts.peek() == token.SEMICOLON:
             value = None
         else:
-            value = expr.parse_binary(ts)
+            value = expr.parse_ternary(ts)
         if ts.consume() != token.SEMICOLON:
             raise ParseError(ts)
         return stmt.Return(value)
