@@ -58,8 +58,8 @@ class ImplementationDefined:
     def __init__(self, aspect):
         self.aspect = aspect
 
-    def __str__(self):
-        return 'IMPLEMENTATION_DEFINED "%s"' % self.aspect
+    def __print__(self, indent):
+        print indent + 'IMPLEMENTATION_DEFINED "%s"' % self.aspect
 
 class If:
     def __init__(self, expression, then_body, else_body):
