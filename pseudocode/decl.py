@@ -47,16 +47,21 @@ class Function:
             for statement in self.body:
                 statement.__print__(indent + '    ')
 
-class Constant:
-    def __init__(self, datatype, name, expression):
+class Variable:
+    def __init__(self, is_constant, datatype, variables):
+        self.is_constant = is_constant
         self.datatype = datatype
-        self.name = name
-        self.expression = expression
+        self.variables = variables
 
     def __print__(self, indent):
-        print indent + 'constant %s %s = %s;' % (
-            str(self.datatype), '.'.join(str(part) for part in self.name),
-            str(self.expression))
+        variables = ', '.join(
+            '.'.join(str(part) for part in name) +
+            (' = ' + str(expression) if expression is not None else '')
+            for name, expression in self.variables)
+        if self.is_constant:
+            print indent + 'constant %s %s;' % (str(self.datatype), variables)
+        else:
+            print indent + '%s %s;' % (str(self.datatype), variables)
 
 class Array:
     def __init__(self, datatype, name):
@@ -142,21 +147,20 @@ def parse_name(ts):
 def parse(ts):
     if ts.consume_if(token.rw['constant']):
         datatype = dtype.parse(ts)
-        name = []
+        variables = []
         while True:
-            name.append(ts.consume())
-            if isinstance(name[-1], token.DeclarationIdentifier):
+            name, overload = parse_name(ts)
+            if overload:
+                raise ParseError(ts)
+            if ts.consume() != token.EQUALS:
+                raise ParseError(ts)
+            expression = expr.parse_ternary(ts)
+            variables.append((name, expression))
+            if not ts.consume_if(token.COMMA):
                 break
-            if not isinstance(name[-1], token.Identifier):
-                raise ParseError(ts)
-            if ts.consume() != token.PERIOD:
-                raise ParseError(ts)
-        if ts.consume() != token.EQUALS:
-            raise ParseError(ts)
-        expression = expr.parse_ternary(ts)
         if ts.consume() != token.SEMICOLON:
             raise ParseError(ts)
-        return decl.Constant(datatype, name, expression)
+        return decl.Variable(True, datatype, variables)
 
     if ts.consume_if(token.rw['enumeration']):
         name = ts.consume()
