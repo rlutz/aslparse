@@ -427,7 +427,7 @@ def parse_block(tokens, parse_func):
                     continue
                 break
 
-            if pos == len(tokens):
+            if pos == len(tokens) or t == token.NEWLINE:
                 if tokens[0] == token.rw['type']:
                     break
                 raise ParseError(tstream.TokenStream(tokens, pos, pos))
