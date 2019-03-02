@@ -160,8 +160,6 @@ def parse(ts):
         variables = []
         while True:
             name, overload = parse_name(ts)
-            if overload:
-                raise ParseError(ts)
             if ts.consume() != token.EQUALS:
                 raise ParseError(ts)
             expression = expr.parse_ternary(ts)
