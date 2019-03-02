@@ -217,9 +217,11 @@ class Tokenizer:
                 # ignore irregular line break inside 'if' condition
                 t = None
                 for t in reversed(self.tokens):
-                    if t == token.rw['if'] or t == token.rw['then']:
+                    if t == token.rw['if'] or \
+                       t == token.rw['elsif'] or \
+                       t == token.rw['then']:
                         break
-                if t == token.rw['if']:
+                if t == token.rw['if'] or t == token.rw['elsif']:
                     continue
                 if data.startswith(' ', pos):
                     raise LexError(data, pos)
