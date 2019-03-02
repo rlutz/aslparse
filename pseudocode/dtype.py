@@ -66,11 +66,9 @@ def parse(ts):
         return dtype.dt_bit
 
     if ts.consume_if(token.rw['bits']):
-        if ts.consume() != token.OPAREN:
-            raise ParseError(ts)
+        ts.consume_assert(token.OPAREN)
         expression = expr.parse_ternary(ts)
-        if ts.consume() != token.CPAREN:
-            raise ParseError(ts)
+        ts.consume_assert(token.CPAREN)
         return dtype.Bits(expression)
 
     if ts.consume_if(token.rw['boolean']):
@@ -85,8 +83,7 @@ def parse(ts):
             partial_types.append(dtype.parse(ts))
             if not ts.consume_if(token.COMMA):
                 break
-        if ts.consume() != token.CPAREN:
-            raise ParseError(ts)
+        ts.consume_assert(token.CPAREN)
         return dtype.Compound(partial_types)
 
     name = []

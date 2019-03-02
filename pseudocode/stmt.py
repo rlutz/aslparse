@@ -201,8 +201,7 @@ def parse_body(ts):
 
 def parse_if_segment(ts):
     expression = expr.parse_binary(ts)
-    if ts.consume() != token.rw['then']:
-        raise ParseError(ts)
+    ts.consume_assert(token.rw['then'])
 
     then_body = stmt.parse_body(ts)
 
@@ -296,8 +295,7 @@ def parse_statement(ts):
         if not isinstance(var, token.Identifier) and \
            not isinstance(var, token.LinkedIdentifier):
             raise ParseError(ts)
-        if ts.consume() != token.EQUALS:
-            raise ParseError(ts)
+        ts.consume_assert(token.EQUALS)
         start = expr.parse_binary(ts)
         if ts.consume_if(token.rw['to']):
             down = False
@@ -311,8 +309,7 @@ def parse_statement(ts):
 
     if ts.consume_if(token.rw['while']):
         condition = expr.parse_binary(ts)
-        if ts.consume() != token.rw['do']:
-            raise ParseError(ts)
+        ts.consume_assert(token.rw['do'])
         body = stmt.parse_body(ts)
         return stmt.While(condition, body)
 
@@ -320,17 +317,14 @@ def parse_statement(ts):
         if not isinstance(ts.peek(), list):
             raise ParseError(ts)
         body = stmt.parse_block(ts.consume(), stmt.parse_statement)
-        if ts.consume() != token.rw['until']:
-            raise ParseError(ts)
+        ts.consume_assert(token.rw['until'])
         condition = expr.parse_binary(ts)
-        if ts.consume() != token.SEMICOLON:
-            raise ParseError(ts)
+        ts.consume_assert(token.SEMICOLON)
         return stmt.Repeat(body, condition)
 
     if ts.consume_if(token.rw['case']):
         expression = expr.parse_binary(ts)
-        if ts.consume() != token.rw['of']:
-            raise ParseError(ts)
+        ts.consume_assert(token.rw['of'])
         if not isinstance(ts.peek(), list):
             raise ParseError(ts)
         clauses = stmt.parse_block(ts.consume(), parse_case_clause)
@@ -340,32 +334,27 @@ def parse_statement(ts):
         s = ts.consume()
         if not isinstance(s, token.String):
             raise ParseError(ts)
-        if ts.consume() != token.SEMICOLON:
-            raise ParseError(ts)
+        ts.consume_assert(token.SEMICOLON)
         return stmt.See(s.data)
 
     if ts.consume_if(token.rw['UNDEFINED']):
-        if ts.consume() != token.SEMICOLON:
-            raise ParseError(ts)
+        ts.consume_assert(token.SEMICOLON)
         return stmt.Undefined()
 
     if ts.consume_if(token.rw['UNPREDICTABLE']):
-        if ts.consume() != token.SEMICOLON:
-            raise ParseError(ts)
+        ts.consume_assert(token.SEMICOLON)
         return stmt.Unpredictable()
 
     if ts.consume_if(token.rw['IMPLEMENTATION_DEFINED']):
         if not isinstance(ts.peek(), token.String):
             raise ParseError(ts)
         aspect = ts.consume().data
-        if ts.consume() != token.SEMICOLON:
-            raise ParseError(ts)
+        ts.consume_assert(token.SEMICOLON)
         return stmt.ImplementationDefined(aspect)
 
     if ts.consume_if(token.rw['assert']):
         expression = expr.parse_ternary(ts)
-        if ts.consume() != token.SEMICOLON:
-            raise ParseError(ts)
+        ts.consume_assert(token.SEMICOLON)
         return stmt.Assert(expression)
 
     if ts.consume_if(token.rw['return']):
@@ -373,18 +362,15 @@ def parse_statement(ts):
             value = None
         else:
             value = expr.parse_ternary(ts)
-        if ts.consume() != token.SEMICOLON:
-            raise ParseError(ts)
+        ts.consume_assert(token.SEMICOLON)
         return stmt.Return(value)
 
     if ts.consume_if(token.rw['constant']):
         datatype = dtype.parse(ts)
         lhs = expr.parse_identifier_chain(ts)
-        if ts.consume() != token.EQUALS:
-            raise ParseError(ts)
+        ts.consume_assert(token.EQUALS)
         expression = expr.parse_ternary(ts)
-        if ts.consume() != token.SEMICOLON:
-            raise ParseError(ts)
+        ts.consume_assert(token.SEMICOLON)
         return stmt.ConstantAssignment(datatype, lhs, expression)
 
     if ts.peek() == token.rw['enumeration']:
@@ -402,8 +388,7 @@ def parse_statement(ts):
                 variables.append((lhs, None))
             if not sub_ts.consume_if(token.COMMA):
                 break
-        if sub_ts.consume() != token.SEMICOLON:
-            raise ParseError(sub_ts)
+        sub_ts.consume_assert(token.SEMICOLON)
     except ParseError:
         ts.abandon(sub_ts)
     else:
@@ -418,17 +403,13 @@ def parse_statement(ts):
             args = expr.parse_list(ts)
         else:
             args = []
-        if ts.consume() != token.CPAREN:
-            raise ParseError(ts)
-        if ts.consume() != token.SEMICOLON:
-            raise ParseError(ts)
+        ts.consume_assert(token.CPAREN)
+        ts.consume_assert(token.SEMICOLON)
         return stmt.FunctionCall(lhs, args)
 
-    if ts.consume() != token.EQUALS:
-        raise ParseError(ts)
+    ts.consume_assert(token.EQUALS)
     expression = expr.parse_ternary(ts)
-    if ts.consume() != token.SEMICOLON:
-        raise ParseError(ts)
+    ts.consume_assert(token.SEMICOLON)
     return stmt.Assignment(lhs, expression)
 
 

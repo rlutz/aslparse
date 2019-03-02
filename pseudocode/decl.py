@@ -160,14 +160,12 @@ def parse(ts):
         variables = []
         while True:
             name, overload = parse_name(ts)
-            if ts.consume() != token.EQUALS:
-                raise ParseError(ts)
+            ts.consume_assert(token.EQUALS)
             expression = expr.parse_ternary(ts)
             variables.append((name, expression))
             if not ts.consume_if(token.COMMA):
                 break
-        if ts.consume() != token.SEMICOLON:
-            raise ParseError(ts)
+        ts.consume_assert(token.SEMICOLON)
         return decl.Variable(True, datatype, variables)
 
     if ts.consume_if(token.rw['enumeration']):
@@ -175,8 +173,7 @@ def parse(ts):
         if not isinstance(name, token.Identifier) and \
            not isinstance(name, token.DeclarationIdentifier):
             raise ParseError(ts)
-        if ts.consume() != token.OBRACE:
-            raise ParseError(ts)
+        ts.consume_assert(token.OBRACE)
         values = []
         while True:
             value = ts.consume()
@@ -186,10 +183,8 @@ def parse(ts):
             values.append(value)
             if not ts.consume_if(token.COMMA):
                 break
-        if ts.consume() != token.CBRACE:
-            raise ParseError(ts)
-        if ts.consume() != token.SEMICOLON:
-            raise ParseError(ts)
+        ts.consume_assert(token.CBRACE)
+        ts.consume_assert(token.SEMICOLON)
         return decl.Enumeration(name, values)
 
     if ts.consume_if(token.rw['type']):
@@ -198,12 +193,10 @@ def parse(ts):
             return decl.Type(name, None)
         if ts.consume_if(token.EQUALS):
             datatype = dtype.parse(ts)
-            if ts.consume() != token.SEMICOLON:
-                raise ParseError(ts)
+            ts.consume_assert(token.SEMICOLON)
             return decl.TypeEquals(name, datatype)
         elif ts.consume_if(token.rw['is']):
-            if ts.consume() != token.OPAREN:
-                raise ParseError(ts)
+            ts.consume_assert(token.OPAREN)
             fields = []
             while True:
                 field_type = dtype.parse(ts)
@@ -214,8 +207,7 @@ def parse(ts):
                 fields.append((field_type, t))
                 if not ts.consume_if(token.COMMA):
                     break
-            if ts.consume() != token.CPAREN:
-                raise ParseError(ts)
+            ts.consume_assert(token.CPAREN)
             return decl.Type(name, fields)
         else:
             raise ParseError(ts)
@@ -229,16 +221,12 @@ def parse(ts):
                 raise ParseError(ts)
             if not ts.consume_if(token.PERIOD):
                 break
-        if ts.consume() != token.OBRACKET:
-            raise ParseError(ts)
+        ts.consume_assert(token.OBRACKET)
         start = expr.parse_binary(ts)
-        if ts.consume() != token.DOUBLE_PERIOD:
-            raise ParseError(ts)
+        ts.consume_assert(token.DOUBLE_PERIOD)
         stop = expr.parse_binary(ts)
-        if ts.consume() != token.CBRACKET:
-            raise ParseError(ts)
-        if ts.consume() != token.SEMICOLON:
-            raise ParseError(ts)
+        ts.consume_assert(token.CBRACKET)
+        ts.consume_assert(token.SEMICOLON)
         return decl.Array(dtype.Array(base_type, start, stop), name)
 
 
@@ -268,8 +256,7 @@ def parse(ts):
                 variables.append((name, expression))
                 if not ts.consume_if(token.COMMA):
                     break
-            if ts.consume() != token.SEMICOLON:
-                raise ParseError(ts)
+            ts.consume_assert(token.SEMICOLON)
             return decl.Variable(False, result_type, variables)
 
     if ts.consume_if(token.OPAREN):
@@ -297,13 +284,11 @@ def parse(ts):
                 parameters.append((param_type, t, by_reference))
                 if not ts.consume_if(token.COMMA):
                     break
-        if ts.consume() != expected_closing:
-            raise ParseError(ts)
+        ts.consume_assert(expected_closing)
     else:
         parameters = None
     if functype == SETTER:
-        if ts.consume() != token.EQUALS:
-            raise ParseError(ts)
+        ts.consume_assert(token.EQUALS)
         result_type = dtype.parse(ts)
         result_name = ts.consume()
         if not isinstance(result_name, token.Identifier) and \

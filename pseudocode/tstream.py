@@ -23,6 +23,13 @@ class TokenStream:
         self.pos += 1
         return True
 
+    def consume_assert(self, expected):
+        if self.pos == self.stop:
+            raise ParseError(self)
+        if self.tokens[self.pos] != expected:
+            raise ParseError(self)
+        self.pos += 1
+
     def peek(self):
         if self.pos == self.stop:
             raise ParseError(self)

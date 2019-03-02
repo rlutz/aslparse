@@ -173,8 +173,7 @@ def parse_bitspec_clause(ts):
     sub_ts = ts.fork()
     args = []
     try:
-        if sub_ts.consume() != token.LESS:
-            raise ParseError(sub_ts)
+        sub_ts.consume_assert(token.LESS)
         while True:
             arg = expr.parse_binary(sub_ts, len(operators) - 3)
             if sub_ts.consume_if(token.COLON):
@@ -187,8 +186,7 @@ def parse_bitspec_clause(ts):
                 args.append(arg)
             if not sub_ts.consume_if(token.COMMA):
                 break
-        if sub_ts.consume() != token.GREATER:
-            raise ParseError(sub_ts)
+        sub_ts.consume_assert(token.GREATER)
     except ParseError as e:
         ts.abandon(sub_ts)
         return None
@@ -228,8 +226,7 @@ def parse_assignable(ts):
                     args = expr.parse_list(ts)
                 else:
                     args = []
-                if ts.consume() != token.CBRACKET:
-                    raise ParseError(ts)
+                ts.consume_assert(token.CBRACKET)
                 expression = expr.Arguments(expression, '[]', args)
             if not ts.consume_if(token.PERIOD):
                 break
@@ -244,8 +241,7 @@ def parse_assignable(ts):
                     elements.append(expr.QualifiedIdentifier(expression, t))
                     if not ts.consume_if(token.COMMA):
                         break
-                if ts.consume() != token.GREATER:
-                    raise ParseError(ts)
+                ts.consume_assert(token.GREATER)
                 return Bits(elements)
             if not isinstance(t, token.Identifier) and \
                not isinstance(t, token.LinkedIdentifier):
@@ -267,8 +263,7 @@ def parse_assignable(ts):
             elements.append(t)
             if not ts.consume_if(token.COMMA):
                 break
-        if ts.consume() != token.GREATER:
-            raise ParseError(ts)
+        ts.consume_assert(token.GREATER)
         return Bits(elements)
 
     if ts.consume_if(token.OPAREN):
@@ -277,8 +272,7 @@ def parse_assignable(ts):
             members.append(expr.parse_assignable(ts))
             if not ts.consume_if(token.COMMA):
                 break
-        if ts.consume() != token.CPAREN:
-            raise ParseError(ts)
+        ts.consume_assert(token.CPAREN)
         return Values(members)
 
     if ts.consume_if(token.HYPHEN):
@@ -316,8 +310,7 @@ def parse_operand(ts):
         return expr.Numeric(t)
     elif ts.consume_if(token.OPAREN):
         expressions = expr.parse_list(ts)
-        if ts.consume() != token.CPAREN:
-            raise ParseError(ts)
+        ts.consume_assert(token.CPAREN)
         if len(expressions) > 1:
             return Values(expressions)
         expression = expressions[0]
@@ -331,8 +324,7 @@ def parse_operand(ts):
             members = expr.parse_list(ts)
         else:
             members = []
-        if ts.consume() != token.CBRACE:
-            raise ParseError(ts)
+        ts.consume_assert(token.CBRACE)
         return expr.Set(members)
 
 
@@ -361,8 +353,7 @@ def parse_operand(ts):
             args = expr.parse_list(ts)
         else:
             args = []
-        if ts.consume() != token.CPAREN:
-            raise ParseError(ts)
+        ts.consume_assert(token.CPAREN)
         expression = expr.Arguments(expression, '()', args)
     if ts.maybe_peek() == token.LESS:
         args = expr.parse_bitspec_clause(ts)
@@ -452,8 +443,7 @@ def parse_binary(ts, precedence_limit = 0):
 
 def parse_ternary_segment(ts):
     condition = expr.parse_binary(ts)
-    if ts.consume() != token.rw['then']:
-        raise ParseError(ts)
+    ts.consume_assert(token.rw['then'])
     arg0 = expr.parse_binary(ts)
     if ts.consume_if(token.rw['elsif']):
         arg1 = expr.parse_ternary_segment(ts)
