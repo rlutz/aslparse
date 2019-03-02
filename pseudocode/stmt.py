@@ -1,4 +1,4 @@
-import token, expr, stmt, dtype, tstream
+import token, expr, stmt, dtype, decl, tstream
 from . import ParseError
 
 class Assignment:
@@ -163,6 +163,13 @@ class Return:
             print indent + 'return ' + str(self.value) + ';'
         else:
             print indent + 'return;'
+
+class LocalDeclaration:
+    def __init__(self, decl):
+        self.decl = decl
+
+    def __print__(self, indent):
+        self.decl.__print__(indent)
 
 
 # body :== statement | indented-block
@@ -363,6 +370,9 @@ def parse_statement(ts):
         if ts.consume() != token.SEMICOLON:
             raise ParseError(ts)
         return stmt.ConstantAssignment(datatype, lhs, expression)
+
+    if ts.peek() == token.rw['enumeration']:
+        return stmt.LocalDeclaration(decl.parse(ts))
 
     sub_ts = ts.fork()
     try:

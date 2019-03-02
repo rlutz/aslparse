@@ -172,14 +172,16 @@ def parse(ts):
 
     if ts.consume_if(token.rw['enumeration']):
         name = ts.consume()
-        if not isinstance(name, token.DeclarationIdentifier):
+        if not isinstance(name, token.Identifier) and \
+           not isinstance(name, token.DeclarationIdentifier):
             raise ParseError(ts)
         if ts.consume() != token.OBRACE:
             raise ParseError(ts)
         values = []
         while True:
             value = ts.consume()
-            if not isinstance(value, token.DeclarationIdentifier):
+            if not isinstance(value, token.Identifier) and \
+               not isinstance(value, token.DeclarationIdentifier):
                 raise ParseError(ts)
             values.append(value)
             if not ts.consume_if(token.COMMA):
