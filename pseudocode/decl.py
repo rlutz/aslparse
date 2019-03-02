@@ -206,7 +206,8 @@ def parse(ts):
             while True:
                 field_type = dtype.parse(ts)
                 t = ts.consume()
-                if not isinstance(t, token.Identifier):
+                if not isinstance(t, token.Identifier) and \
+                   not isinstance(t, token.LinkedIdentifier):
                     raise ParseError(ts)
                 fields.append((field_type, t))
                 if not ts.consume_if(token.COMMA):
