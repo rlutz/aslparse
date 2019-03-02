@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, xml.parsers.expat
+import os, sys, xml.parsers.expat
 from pseudocode import *
 from pseudocode import LexError, ParseError
 
@@ -255,7 +255,14 @@ def parse_file(path, is_shared_pseudocode):
     f.close()
 
 def main():
-    parse_file(sys.argv[1], True)
+    base_dir = sys.argv[1]
+    for fn in sorted(os.listdir(base_dir)):
+        if not fn.endswith('.xml'):
+            continue
+        path = os.path.join(base_dir, fn)
+        print
+        print '###', path
+        parse_file(path, fn == 'shared_pseudocode.xml')
 
 if __name__ == '__main__':
     main()
