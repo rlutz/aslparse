@@ -185,8 +185,6 @@ def parse(ts):
 
     if ts.consume_if(token.rw['type']):
         name, overload = parse_name(ts)
-        if overload:
-            raise ParseError(ts)
         if ts.consume_if(token.SEMICOLON):
             return decl.Type(name, None)
         if ts.consume() != token.rw['is']:
