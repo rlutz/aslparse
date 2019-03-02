@@ -29,7 +29,13 @@ class Arguments:
             return str(arg)
 
     def __str__(self):
-        return str(self.func) + self.method[0] + \
+        if isinstance(self.func, expr.Ternary) or \
+           isinstance(self.func, expr.Operator) or \
+           isinstance(self.func, expr.Unary):
+            func = '(%s)' % str(self.func)
+        else:
+            func = str(self.func)
+        return func + self.method[0] + \
             ', '.join(self._fmt_arg(arg) for arg in self.args) + self.method[1]
 
 class Set:
@@ -288,6 +294,7 @@ def parse_assignable(ts):
 #               | number bitspec-clause
 #               | bitvector
 #               | '(' expression-list ')'
+#               | '(' expression-list ')' bitspec-clause
 #               | '{' maybe-expression-list '}'
 #               | datatype 'UNKNOWN'
 #               | datatype 'IMPLEMENTATION_DEFINED'
@@ -313,7 +320,12 @@ def parse_operand(ts):
             raise ParseError(ts)
         if len(expressions) > 1:
             return Values(expressions)
-        return expressions[0]
+        expression = expressions[0]
+        if ts.maybe_peek() == token.LESS:
+            args = expr.parse_bitspec_clause(ts)
+            if args is not None:
+                expression = expr.Arguments(expression, '<>', args)
+        return expression
     elif ts.consume_if(token.OBRACE):
         if ts.peek() != token.CBRACE:
             members = expr.parse_list(ts)
