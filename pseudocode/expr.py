@@ -245,7 +245,7 @@ def parse_assignable(ts):
                not isinstance(t, token.LinkedIdentifier):
                 raise ParseError(ts)
             expression = expr.QualifiedIdentifier(expression, t)
-        if ts.peek() == token.LESS:
+        if ts.maybe_peek() == token.LESS:
             args = expr.parse_bitspec_clause(ts)
             if args is not None:
                 expression = expr.Arguments(expression, '<>', args)
@@ -300,7 +300,7 @@ def parse_operand(ts):
        isinstance(t, token.HexadecimalNumber):
         ts.consume()
         expression = expr.Numeric(t)
-        if ts.peek() == token.LESS:
+        if ts.maybe_peek() == token.LESS:
             args = expr.parse_bitspec_clause(ts)
             expression = expr.Arguments(expression, '<>', args)
         return expression
@@ -352,7 +352,7 @@ def parse_operand(ts):
         if ts.consume() != token.CPAREN:
             raise ParseError(ts)
         expression = expr.Arguments(expression, '()', args)
-    if ts.peek() == token.LESS:
+    if ts.maybe_peek() == token.LESS:
         args = expr.parse_bitspec_clause(ts)
         if args is not None:
             expression = expr.Arguments(expression, '<>', args)
