@@ -103,6 +103,15 @@ class Type:
                 ',' if i != len(self.fields) - 1 else '')
         print indent + ')'
 
+class TypeEquals:
+    def __init__(self, name, datatype):
+        self.name = name
+        self.datatype = datatype
+
+    def __print__(self, indent):
+        print indent + 'type %s = %s;' % (
+            '.'.join(str(part) for part in self.name), str(self.datatype))
+
 # parameter :== datatype identifier
 # parameter-list :== parameter | parameter-list ',' parameter
 # maybe-parameter-list :== <empty> | parameter-list
@@ -187,22 +196,28 @@ def parse(ts):
         name, overload = parse_name(ts)
         if ts.consume_if(token.SEMICOLON):
             return decl.Type(name, None)
-        if ts.consume() != token.rw['is']:
-            raise ParseError(ts)
-        if ts.consume() != token.OPAREN:
-            raise ParseError(ts)
-        fields = []
-        while True:
-            field_type = dtype.parse(ts)
-            t = ts.consume()
-            if not isinstance(t, token.Identifier):
+        if ts.consume_if(token.EQUALS):
+            datatype = dtype.parse(ts)
+            if ts.consume() != token.SEMICOLON:
                 raise ParseError(ts)
-            fields.append((field_type, t))
-            if not ts.consume_if(token.COMMA):
-                break
-        if ts.consume() != token.CPAREN:
+            return decl.TypeEquals(name, datatype)
+        elif ts.consume_if(token.rw['is']):
+            if ts.consume() != token.OPAREN:
+                raise ParseError(ts)
+            fields = []
+            while True:
+                field_type = dtype.parse(ts)
+                t = ts.consume()
+                if not isinstance(t, token.Identifier):
+                    raise ParseError(ts)
+                fields.append((field_type, t))
+                if not ts.consume_if(token.COMMA):
+                    break
+            if ts.consume() != token.CPAREN:
+                raise ParseError(ts)
+            return decl.Type(name, fields)
+        else:
             raise ParseError(ts)
-        return decl.Type(name, fields)
 
     if ts.consume_if(token.rw['array']):
         base_type = dtype.parse(ts)
