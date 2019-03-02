@@ -72,6 +72,8 @@ class If:
         print indent + 'if %s then' % str(statement.expression)
 
         while True:
+            if not statement.then_body:
+                print indent + '    // empty body'
             for s in statement.then_body:
                 s.__print__(indent + '    ')
 
@@ -81,6 +83,8 @@ class If:
             if len(statement.else_body) != 1 or \
                not isinstance(statement.else_body[0], stmt.If):
                 print indent + 'else'
+                if not statement.else_body:
+                    print indent + '    // empty body'
                 for s in statement.else_body:
                     s.__print__(indent + '    ')
                 break
@@ -100,6 +104,8 @@ class For:
         print indent + 'for %s = %s %s %s' % (
             str(self.var), str(self.start), 'downto' if self.down else 'to',
             str(self.stop))
+        if not self.body:
+            print indent + '    // empty body'
         for statement in self.body:
             statement.__print__(indent + '    ')
 
@@ -110,6 +116,8 @@ class While:
 
     def __print__(self, indent):
         print indent + 'while %s do' % str(self.condition)
+        if not self.body:
+            print indent + '    // empty body'
         for statement in self.body:
             statement.__print__(indent + '    ')
 
@@ -120,6 +128,8 @@ class Repeat:
 
     def __print__(self, indent):
         print indent + 'repeat'
+        if not self.body:
+            print indent + '    // empty body'
         for statement in self.body:
             statement.__print__(indent + '    ')
         print indent + 'until %s;' % str(self.condition)
@@ -131,6 +141,8 @@ class Case:
 
     def __print__(self, indent):
         print indent + 'case ' + str(self.expression) + ' of'
+        if not self.clauses:
+            print indent + '    // no clauses'
         for clause in self.clauses:
             clause.__print__(indent + '    ')
 
@@ -144,6 +156,8 @@ class CaseClause:
             print indent + 'when ' + ', '.join(str(p) for p in self.patterns)
         else:
             print indent + 'otherwise'
+        if not self.body:
+            print indent + '    // empty body'
         for statement in self.body:
             statement.__print__(indent + '    ')
 
@@ -233,7 +247,9 @@ def parse_case_clause(ts):
     else:
         raise ParseError(ts)
 
-    if isinstance(ts.peek(), list):
+    if ts.maybe_peek() == None:
+        body = []
+    elif isinstance(ts.peek(), list):
         body = stmt.parse_block(ts.consume(), stmt.parse_statement)
     else:
         body = []
@@ -439,6 +455,9 @@ def parse_block(tokens, parse_func):
 
             if pos == len(tokens) or t == token.NEWLINE:
                 if tokens[0] == token.rw['type']:
+                    break
+                if tokens[0] == token.rw['when']:
+                    # empty case clause
                     break
                 raise ParseError(tstream.TokenStream(tokens, pos, pos))
 
