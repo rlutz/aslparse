@@ -265,7 +265,7 @@ def parse_file(path, is_shared_pseudocode):
 def main():
     base_dir = sys.argv[1]
     for fn in sorted(os.listdir(base_dir)):
-        if not fn.endswith('.xml'):
+        if not fn.endswith('.xml') or fn == 'onebigfile.xml':
             continue
         path = os.path.join(base_dir, fn)
         print
