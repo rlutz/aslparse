@@ -19,8 +19,9 @@ class Function:
         if self.parameters is None:
             params = None
         else:
-            params = ', '.join(str(pt) + ' ' + str(pi)
-                               for pt, pi in self.parameters)
+            params = ', '.join('%s %s%s' % (
+                                 str(pt), '&' if by_reference else '', str(pi))
+                               for pt, pi, by_reference in self.parameters)
 
         if self.functype == SETTER:
             if params is not None:
@@ -227,15 +228,6 @@ def parse(ts):
         return decl.Array(dtype.Array(base_type, start, stop), name)
 
 
-    if isinstance(ts.peek(), token.DeclarationIdentifier) and \
-       ts.peek().name == 'ElemP':
-        ts.pos = ts.stop
-        class Dummy:
-            def __print__(self, indent):
-                print indent + '// skipping ElemP setter'
-        return Dummy()
-
-
     sub_ts = ts.fork()
     try:
         result_type = dtype.parse(sub_ts)
@@ -283,11 +275,12 @@ def parse(ts):
         if ts.peek() != expected_closing:
             while True:
                 param_type = dtype.parse(ts)
+                by_reference = ts.consume_if(token.AMPERSAND)
                 t = ts.consume()
                 if not isinstance(t, token.Identifier) and \
                    not isinstance(t, token.LinkedIdentifier):
                     raise ParseError(ts)
-                parameters.append((param_type, t))
+                parameters.append((param_type, t, by_reference))
                 if not ts.consume_if(token.COMMA):
                     break
         if ts.consume() != expected_closing:
