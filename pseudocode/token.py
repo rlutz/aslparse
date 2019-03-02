@@ -201,16 +201,23 @@ class Tokenizer:
                     continue
                 # skip empty and comment-only lines
                 while True:
-                    if pos < len(data) and data[pos] == '\n':
-                        pos += 1
-                        continue
+                    try:
+                        p = data.index('\n', pos)
+                    except ValueError:
+                        pass
+                    else:
+                        if data[pos:p] == ' ' * (p - pos):
+                            pos = p + 1
+                            continue
                     try:
                         p = data.index('//', pos)
                     except ValueError:
-                        break
-                    if data[pos:p] != ' ' * (p - pos):
-                        break
-                    pos = data.index('\n', pos)
+                        pass
+                    else:
+                        if data[pos:p] == ' ' * (p - pos):
+                            pos = data.index('\n', pos) + 1
+                            continue
+                    break
                 indent = 0
                 while data.startswith('    ', pos + indent * 4):
                     indent += 1
