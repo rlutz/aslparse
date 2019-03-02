@@ -385,7 +385,7 @@ def parse_unary(ts):
 #            | '<' | '<=' | '>' | '>='
 #            | '<<' | '>>' | ':'
 #            | '+' | '-'
-#            | '*' | '/' | 'DIV' | 'MOD'
+#            | '*' | '/' | 'DIV' | 'MOD' | 'REM'
 #            | '^'
 
 # expression2 :== expression1
@@ -402,7 +402,8 @@ operators = [
     [token.LESS, token.LESS_EQUALS, token.GREATER, token.GREATER_EQUALS],
     [token.DOUBLE_LESS, token.DOUBLE_GREATER, token.COLON],
     [token.PLUS, token.HYPHEN],
-    [token.ASTERISK, token.SLASH, token.rw['DIV'], token.rw['MOD']],
+    [token.ASTERISK, token.SLASH, token.rw['DIV'], token.rw['MOD'],
+                                                   token.rw['REM']],
     [token.CARET],
 ]
 
