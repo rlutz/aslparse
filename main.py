@@ -91,9 +91,10 @@ class Fragment:
 
         try:
           if not tokens:
-            print
-            print '// empty'
-            print
+            pass
+            #print
+            #print '// empty'
+            #print
           elif (tokens[-1] == token.NEWLINE and
                 tokens[-2] == token.SEMICOLON) \
                   or isinstance(tokens[-1], list) \
@@ -102,17 +103,20 @@ class Fragment:
                 body = stmt.parse_block(tokens, decl.parse)
             else:
                 body = stmt.parse_block(tokens, stmt.parse_statement)
-            print
-            for statement in body:
-                statement.__print__('')
-            print
+            #print
+            #for statement in body:
+            #    statement.__print__('')
+            #print
+            if is_shared_pseudocode:
+                for declaration in body:
+                    ns.process(declaration)
           else:
             assert tokens[-1] == token.NEWLINE
             expression = tstream.parse(tokens, 0, len(tokens) - 1,
                                        expr.parse_ternary)
-            print
-            print str(expression)
-            print
+            #print
+            #print str(expression)
+            #print
         except ParseError as e:
             e.report()
             sys.exit(1)
@@ -274,9 +278,11 @@ def main():
         if not fn.endswith('.xml') or fn == 'onebigfile.xml':
             continue
         path = os.path.join(base_dir, fn)
-        print
-        print '###', path
+        #print
+        #print '###', path
         parse_file(path, fn == 'shared_pseudocode.xml')
+
+    ns.global_ns.__print__('| ')
 
 if __name__ == '__main__':
     main()

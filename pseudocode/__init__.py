@@ -1,4 +1,4 @@
-__all__ = ['token', 'expr', 'stmt', 'dtype', 'decl', 'tstream']
+__all__ = ['token', 'expr', 'stmt', 'dtype', 'decl', 'tstream', 'ns']
 
 class LexError(Exception):
     def __init__(self, data, pos):
