@@ -73,7 +73,7 @@ class Fragment:
             sys.exit(1)
         del self.buf[:]
 
-    def end(self):
+    def end(self, is_shared_pseudocode):
         try:
             self.tokenizer.process(''.join(self.buf) + '\n')
             self.tokenizer.process_end()
@@ -94,7 +94,10 @@ class Fragment:
               tokens[-2] == token.SEMICOLON) \
                   or isinstance(tokens[-1], list) \
                   or tokens[0] == token.rw['type']:
-            body = stmt.parse_block(tokens, decl.parse)
+            if is_shared_pseudocode:
+                body = stmt.parse_block(tokens, decl.parse)
+            else:
+                body = stmt.parse_block(tokens, stmt.parse_statement)
             print
             for statement in body:
                 statement.__print__('')
@@ -114,7 +117,7 @@ class Fragment:
 container = None
 fragment = None
 
-def main():
+def parse_file(path, is_shared_pseudocode):
     p = xml.parsers.expat.ParserCreate(namespace_separator = '!')
 
     def XmlDeclHandler(version, encoding, standalone):
@@ -168,7 +171,7 @@ def main():
         elif name == 'pstext':
             if fragment is None:
                 log.error('closing pstext tag without opening tag')
-            fragment.end()
+            fragment.end(is_shared_pseudocode)
             fragment = None
         elif fragment is not None:
             fragment.end_element(name)
@@ -240,7 +243,7 @@ def main():
     p.NotStandaloneHandler = NotStandaloneHandler
     p.ExternalEntityRefHandler = ExternalEntityRefHandler
 
-    f = open(sys.argv[1])
+    f = open(path)
 
     log.p = p
     try:
@@ -250,6 +253,9 @@ def main():
         log.error("%s" % e)
 
     f.close()
+
+def main():
+    parse_file(sys.argv[1], True)
 
 if __name__ == '__main__':
     main()
