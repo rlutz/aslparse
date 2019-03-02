@@ -185,10 +185,16 @@ def parse_file(path, is_shared_pseudocode):
         pass
 
     def CharacterDataHandler(data):
+        # some files contain indentation errors
         if path.endswith('/mrs_br.xml'):
-            # mrs_br.xml contains an indentation error
             data = data.replace('       UNPREDICTABLE;',
                                 '        UNPREDICTABLE;')
+        if path.endswith('/vcmla.xml'):
+            data = data.replace('               element',
+                                '                element')
+        if path.endswith('/vcvt_xs.xml'):
+            data = data.replace('     when ',
+                                '    when ')
         if fragment is not None:
             fragment.character_data(data)
         #print 'CharacterData', repr(data)
