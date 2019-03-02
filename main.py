@@ -90,8 +90,12 @@ class Fragment:
         tokens = self.tokenizer.tokens
 
         try:
-          if (tokens[-1] == token.NEWLINE and
-              tokens[-2] == token.SEMICOLON) \
+          if not tokens:
+            print
+            print '// empty'
+            print
+          elif (tokens[-1] == token.NEWLINE and
+                tokens[-2] == token.SEMICOLON) \
                   or isinstance(tokens[-1], list) \
                   or tokens[0] == token.rw['type']:
             if is_shared_pseudocode:
