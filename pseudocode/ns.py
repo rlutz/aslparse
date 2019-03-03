@@ -47,6 +47,32 @@ class Type:
     def __print__(self, indent):
         print 'type'
 
+implicit = [
+    'CONTEXTIDR_EL2',
+    'DLR',
+    'DLR_EL0',
+    'DSPSR',
+    'DSPSR_EL0',
+    'EDESR',
+    'FPCR',
+    'FPSCR',
+    'FPSR',
+    'MPAMVPM0_EL2',
+    'MPAMVPM1_EL2',
+    'MPAMVPM2_EL2',
+    'MPAMVPM3_EL2',
+    'MPAMVPM4_EL2',
+    'MPAMVPM5_EL2',
+    'MPAMVPM6_EL2',
+    'MPAMVPM7_EL2',
+    'PMSEVFR_EL1',
+    'IsNonTagCheckedInstruction',
+    'Real',
+    'ReservedEncoding',
+    'Sqrt',
+    'UndefinedFault'
+]
+
 global_ns = ns.Namespace()
 
 class LookupError(Exception):
@@ -55,6 +81,8 @@ class LookupError(Exception):
 
 def lookup(name):
     x = global_ns
+    if len(name) == 1 and name[0].name in implicit:
+        return None
     for part in name:
         assert isinstance(x, ns.Namespace)
         if not isinstance(part, str):

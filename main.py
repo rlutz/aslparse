@@ -284,7 +284,7 @@ def main():
 
     #ns.global_ns.__print__('| ')
 
-    abody.process_namespace(ns.global_ns)
+    scope.process_namespace(ns.global_ns)
 
 if __name__ == '__main__':
     main()

@@ -305,7 +305,7 @@ def parse_statement(ts):
             raise ParseError(ts)
         stop = expr.parse_binary(ts)
         body = stmt.parse_body(ts)
-        return stmt.For(var, start, down, stop, body)
+        return stmt.For(expr.Identifier(var), start, down, stop, body)
 
     if ts.consume_if(token.rw['while']):
         condition = expr.parse_binary(ts)
