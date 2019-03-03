@@ -55,14 +55,14 @@
   '("AND" "DIV" "EOR" "IMPLEMENTATION_DEFINED" "IN" "MOD" "NOT" "OR" "REM"
     "SEE" "UNDEFINED" "UNKNOWN" "UNPREDICTABLE"
     "array" "assert" "case" "constant" "do" "downto" "else" "elsif"
-    "enumeration" "for" "if" "is" "of" "otherwise" "repeat" "return" "then"
-    "to" "until" "when" "while"))
+    "enumeration" "for" "if" "is" "of" "otherwise" "repeat" "return" "signal"
+    "then" "to" "until" "when" "while"))
 
 (defvar asl-builtins
   '("type"))
 
 (defvar asl-types
-  '("bit" "bits" "boolean" "integer"))
+  '("bit" "bits" "boolean" "integer" "real"))
 
 (defvar asl-constants
   '("TRUE" "FALSE" "HIGH" "LOW"))
