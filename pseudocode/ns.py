@@ -123,6 +123,8 @@ def process(declaration):
         ns.define(declaration.name, ns.Array())
     elif isinstance(declaration, decl.Enumeration):
         ns.define([declaration.name], ns.Enumeration())
+        for value in declaration.values:
+            ns.define([value], ns.Enumeration())
     elif isinstance(declaration, decl.Type):
         ns.define(declaration.name, ns.Struct())
     elif isinstance(declaration, decl.TypeEquals):
