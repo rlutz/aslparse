@@ -31,7 +31,8 @@ def process_statement(statement):
     elif isinstance(statement, stmt.Declaration):
         for lhs, expression in statement.variables:
             process_lhs(lhs)
-            process_expression(expression)
+            if expression is not None:
+                process_expression(expression)
     elif isinstance(statement, stmt.FunctionCall):
         process_expression(statement.func)
         for arg in statement.args:
@@ -67,7 +68,8 @@ def process_statement(statement):
     elif isinstance(statement, stmt.Assert):
         process_expression(statement.expression)
     elif isinstance(statement, stmt.Return):
-        process_expression(statement.value)
+        if statement.value is not None:
+            process_expression(statement.value)
     elif isinstance(statement, stmt.LocalDeclaration):
         assert isinstance(statement.declaration, decl.Enumeration)
     else:
@@ -88,7 +90,11 @@ def process_lhs(expression):
             raise SemanticError(expression.method + ' call is not a valid LHS')
         process_expression(expression.func)
         for arg in expression.args:
-            process_expression(arg)
+            if isinstance(arg, tuple):
+                process_expression(arg[0])
+                process_expression(arg[2])
+            else:
+                process_expression(arg)
     elif isinstance(expression, expr.Bits):
         for element in expression.elements:
             process_lhs(element)
@@ -150,5 +156,4 @@ def process_expression(expression):
     elif isinstance(expression, expr.ImplementationDefined):
         pass
     else:
-        print expression.__class__.__name__
         assert False
