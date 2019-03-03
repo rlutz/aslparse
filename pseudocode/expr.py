@@ -146,6 +146,13 @@ class ImplementationDefined:
             return str(self.datatype) + \
                 ' IMPLEMENTATION_DEFINED "%s"' % self.aspect
 
+class Primitive:
+    def __init__(self, token):
+        self.token = token
+
+    def __str__(self):
+        return str(token)
+
 
 def parse_identifier_chain(ts):
     expression = None
@@ -293,6 +300,7 @@ def parse_assignable(ts):
 #               | datatype 'UNKNOWN'
 #               | datatype 'IMPLEMENTATION_DEFINED'
 #               | datatype 'IMPLEMENTATION_DEFINED' string
+#               | 'FALSE' | 'TRUE' | 'LOW' | 'HIGH'
 
 def parse_operand(ts):
     t = ts.peek()
@@ -326,6 +334,9 @@ def parse_operand(ts):
             members = []
         ts.consume_assert(token.CBRACE)
         return expr.Set(members)
+    elif t in [token.rw['FALSE'], token.rw['TRUE'],
+               token.rw['LOW'], token.rw['HIGH']]:
+        return expr.Primitive(ts.consume())
 
 
     sub_ts = ts.fork()
