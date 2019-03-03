@@ -282,7 +282,9 @@ def main():
         #print '###', path
         parse_file(path, fn == 'shared_pseudocode.xml')
 
-    ns.global_ns.__print__('| ')
+    #ns.global_ns.__print__('| ')
+
+    abody.process_namespace(ns.global_ns)
 
 if __name__ == '__main__':
     main()

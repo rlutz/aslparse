@@ -16,7 +16,7 @@ class Function:
 
     def __print__(self, indent):
         print 'function'
-        for signature in self.signatures:
+        for signature, decl in self.signatures:
             print indent + signature
 
 class Accessor:
@@ -96,7 +96,8 @@ def process(declaration):
                                for pt, pi, by_reference
                                    in declaration.parameters)
             function.signatures.append(
-                '%s (%s)' % (str(declaration.result_type), params))
+                ('%s (%s)' % (str(declaration.result_type), params),
+                 declaration))
         else:
             try:
                 accessor = ns.lookup(declaration.name)
