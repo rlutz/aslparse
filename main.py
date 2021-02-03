@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 import os, sys, xml.parsers.expat
 from pseudocode import *
-from pseudocode import LexError, ParseError
 
 class Log:
     def __init__(self):
