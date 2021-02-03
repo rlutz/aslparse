@@ -443,7 +443,6 @@ def parse_binary(ts, precedence_limit = 0):
                 return expression
 
         stack.append((expression, ts.consume(), len(stack)))
-        del expression
 
 
 # ternary-segment :== expression2 'then' expression2 'elsif' ternary-segment
