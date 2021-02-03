@@ -1,5 +1,8 @@
 #!/usr/bin/python3
-import os, sys, xml.parsers.expat
+import os
+import sys
+import xml.parsers.expat
+
 from pseudocode import *
 
 class Log:
