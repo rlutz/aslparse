@@ -1,7 +1,7 @@
-import token, expr, stmt, dtype, decl
+from . import token, expr, stmt, dtype, decl
 from . import ParseError
 
-FUNCTION, SETTER, GETTER = xrange(3)
+FUNCTION, SETTER, GETTER = range(3)
 
 class Function:
     def __init__(self, functype, result_type, result_name,
@@ -28,21 +28,21 @@ class Function:
                 params = '[%s]' % params
             else:
                 params = ''
-            print indent + '%s%s = %s %s%s' % (
+            print(indent + '%s%s = %s %s%s' % (
                 name, params, str(self.result_type), str(self.result_name),
-                ';' if self.body is None else '')
+                ';' if self.body is None else ''))
         elif self.functype == GETTER:
             if params is not None:
                 params = '[%s]' % params
             else:
                 params = ''
-            print indent + '%s %s%s%s' % (
+            print(indent + '%s %s%s%s' % (
                 str(self.result_type), name, params,
-                ';' if self.body is None else '')
+                ';' if self.body is None else ''))
         else:
-            print indent + '%s %s(%s)%s' % (
+            print(indent + '%s %s(%s)%s' % (
                 str(self.result_type), name, params,
-                ';' if self.body is None else '')
+                ';' if self.body is None else ''))
 
         if self.body is not None:
             for statement in self.body:
@@ -60,9 +60,9 @@ class Variable:
             (' = ' + str(expression) if expression is not None else '')
             for name, expression in self.variables)
         if self.is_constant:
-            print indent + 'constant %s %s;' % (str(self.datatype), variables)
+            print(indent + 'constant %s %s;' % (str(self.datatype), variables))
         else:
-            print indent + '%s %s;' % (str(self.datatype), variables)
+            print(indent + '%s %s;' % (str(self.datatype), variables))
 
 class Array:
     def __init__(self, datatype, name):
@@ -70,8 +70,8 @@ class Array:
         self.name = name
 
     def __print__(self, indent):
-        print indent + '%s %s;' % (
-            str(self.datatype), '.'.join(str(part) for part in self.name))
+        print(indent + '%s %s;' % (
+            str(self.datatype), '.'.join(str(part) for part in self.name)))
 
 class Enumeration:
     def __init__(self, name, values):
@@ -79,9 +79,9 @@ class Enumeration:
         self.values = values
 
     def __print__(self, indent):
-        print indent + 'enumeration %s {%s\n};' % (
+        print(indent + 'enumeration %s {%s\n};' % (
             self.name, ','.join('\n' + indent + '    ' + str(value)
-                                for value in self.values))
+                                for value in self.values)))
 
 class Type:
     def __init__(self, name, fields):
@@ -90,18 +90,18 @@ class Type:
 
     def __print__(self, indent):
         if self.fields is None:
-            print indent + 'type %s;' % '.'.join(str(part)
-                                                 for part in self.name)
+            print(indent + 'type %s;' % '.'.join(str(part)
+                                                 for part in self.name))
             return
-        print indent + 'type ' + '.'.join(str(part) for part in self.name) \
-            + ' is ('
+        print(indent + 'type ' + '.'.join(str(part) for part in self.name)
+            + ' is (')
         for i, field in enumerate(self.fields):
             field_type, field_identifier = field
-            print indent + '    %s %s%s' % (
+            print(indent + '    %s %s%s' % (
                 str(field_type),
                 str(field_identifier),
-                ',' if i != len(self.fields) - 1 else '')
-        print indent + ')'
+                ',' if i != len(self.fields) - 1 else ''))
+        print(indent + ')')
 
 class TypeEquals:
     def __init__(self, name, datatype):
@@ -109,8 +109,8 @@ class TypeEquals:
         self.datatype = datatype
 
     def __print__(self, indent):
-        print indent + 'type %s = %s;' % (
-            '.'.join(str(part) for part in self.name), str(self.datatype))
+        print(indent + 'type %s = %s;' % (
+            '.'.join(str(part) for part in self.name), str(self.datatype)))
 
 # parameter :== datatype identifier
 # parameter-list :== parameter | parameter-list ',' parameter

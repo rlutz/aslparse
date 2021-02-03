@@ -1,4 +1,4 @@
-import token, expr, stmt, dtype, decl, tstream
+from . import token, expr, stmt, dtype, decl, tstream
 from . import ParseError
 
 class Assignment:
@@ -7,7 +7,7 @@ class Assignment:
         self.expression = expression
 
     def __print__(self, indent):
-        print indent + '%s = %s;' % (str(self.lhs), str(self.expression))
+        print(indent + '%s = %s;' % (str(self.lhs), str(self.expression)))
 
 class ConstantAssignment:
     def __init__(self, datatype, lhs, expression):
@@ -16,8 +16,8 @@ class ConstantAssignment:
         self.expression = expression
 
     def __print__(self, indent):
-        print indent + 'constant %s %s = %s;' % (
-            str(self.datatype), str(self.lhs), str(self.expression))
+        print(indent + 'constant %s %s = %s;' % (
+            str(self.datatype), str(self.lhs), str(self.expression)))
 
 class Declaration:
     def __init__(self, datatype, variables):
@@ -28,7 +28,7 @@ class Declaration:
         variables = ', '.join('%s = %s' % (str(lhs), str(expression))
                               if expression is not None else str(lhs)
                               for lhs, expression in self.variables)
-        print indent + '%s %s;' % (str(self.datatype), variables)
+        print(indent + '%s %s;' % (str(self.datatype), variables))
 
 class FunctionCall:
     def __init__(self, func, args):
@@ -36,30 +36,30 @@ class FunctionCall:
         self.args = args
 
     def __print__(self, indent):
-        print indent + str(self.func) + '(' + \
-            ', '.join(str(arg) for arg in self.args) + ');'
+        print(indent + str(self.func) + '(' +
+            ', '.join(str(arg) for arg in self.args) + ');')
 
 class See:
     def __init__(self, target):
         self.target = target
 
     def __print__(self, indent):
-        print indent + 'SEE "%s";' % self.target
+        print(indent + 'SEE "%s";' % self.target)
 
 class Undefined:
     def __print__(self, indent):
-        print indent + 'UNDEFINED;'
+        print(indent + 'UNDEFINED;')
 
 class Unpredictable:
     def __print__(self, indent):
-        print indent + 'UNPREDICTABLE;'
+        print(indent + 'UNPREDICTABLE;')
 
 class ImplementationDefined:
     def __init__(self, aspect):
         self.aspect = aspect
 
     def __print__(self, indent):
-        print indent + 'IMPLEMENTATION_DEFINED "%s"' % self.aspect
+        print(indent + 'IMPLEMENTATION_DEFINED "%s"' % self.aspect)
 
 class If:
     def __init__(self, expression, then_body, else_body):
@@ -69,11 +69,11 @@ class If:
 
     def __print__(self, indent):
         statement = self
-        print indent + 'if %s then' % str(statement.expression)
+        print(indent + 'if %s then' % str(statement.expression))
 
         while True:
             if not statement.then_body:
-                print indent + '    // empty body'
+                print(indent + '    // empty body')
             for s in statement.then_body:
                 s.__print__(indent + '    ')
 
@@ -82,15 +82,15 @@ class If:
 
             if len(statement.else_body) != 1 or \
                not isinstance(statement.else_body[0], stmt.If):
-                print indent + 'else'
+                print(indent + 'else')
                 if not statement.else_body:
-                    print indent + '    // empty body'
+                    print(indent + '    // empty body')
                 for s in statement.else_body:
                     s.__print__(indent + '    ')
                 break
 
             statement = statement.else_body[0]
-            print indent + 'elsif %s then' % str(statement.expression)
+            print(indent + 'elsif %s then' % str(statement.expression))
 
 class For:
     def __init__(self, var, start, down, stop, body):
@@ -101,11 +101,11 @@ class For:
         self.body = body
 
     def __print__(self, indent):
-        print indent + 'for %s = %s %s %s' % (
+        print(indent + 'for %s = %s %s %s' % (
             str(self.var), str(self.start), 'downto' if self.down else 'to',
-            str(self.stop))
+            str(self.stop)))
         if not self.body:
-            print indent + '    // empty body'
+            print(indent + '    // empty body')
         for statement in self.body:
             statement.__print__(indent + '    ')
 
@@ -115,9 +115,9 @@ class While:
         self.body = body
 
     def __print__(self, indent):
-        print indent + 'while %s do' % str(self.condition)
+        print(indent + 'while %s do' % str(self.condition))
         if not self.body:
-            print indent + '    // empty body'
+            print(indent + '    // empty body')
         for statement in self.body:
             statement.__print__(indent + '    ')
 
@@ -127,12 +127,12 @@ class Repeat:
         self.condition = condition
 
     def __print__(self, indent):
-        print indent + 'repeat'
+        print(indent + 'repeat')
         if not self.body:
-            print indent + '    // empty body'
+            print(indent + '    // empty body')
         for statement in self.body:
             statement.__print__(indent + '    ')
-        print indent + 'until %s;' % str(self.condition)
+        print(indent + 'until %s;' % str(self.condition))
 
 class Case:
     def __init__(self, expression, clauses):
@@ -140,9 +140,9 @@ class Case:
         self.clauses = clauses
 
     def __print__(self, indent):
-        print indent + 'case ' + str(self.expression) + ' of'
+        print(indent + 'case ' + str(self.expression) + ' of')
         if not self.clauses:
-            print indent + '    // no clauses'
+            print(indent + '    // no clauses')
         for clause in self.clauses:
             clause.__print__(indent + '    ')
 
@@ -153,11 +153,11 @@ class CaseClause:
 
     def __print__(self, indent):
         if self.patterns is not None:
-            print indent + 'when ' + ', '.join(str(p) for p in self.patterns)
+            print(indent + 'when ' + ', '.join(str(p) for p in self.patterns))
         else:
-            print indent + 'otherwise'
+            print(indent + 'otherwise')
         if not self.body:
-            print indent + '    // empty body'
+            print(indent + '    // empty body')
         for statement in self.body:
             statement.__print__(indent + '    ')
 
@@ -166,7 +166,7 @@ class Assert:
         self.expression = expression
 
     def __print__(self, indent):
-        print indent + 'assert ' + str(self.expression) + ';'
+        print(indent + 'assert ' + str(self.expression) + ';')
 
 class Return:
     def __init__(self, value):
@@ -174,9 +174,9 @@ class Return:
 
     def __print__(self, indent):
         if self.value is not None:
-            print indent + 'return ' + str(self.value) + ';'
+            print(indent + 'return ' + str(self.value) + ';')
         else:
-            print indent + 'return;'
+            print(indent + 'return;')
 
 class LocalDeclaration:
     def __init__(self, decl):

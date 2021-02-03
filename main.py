@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 import os, sys, xml.parsers.expat
 from pseudocode import *
 from pseudocode import LexError, ParseError
@@ -82,19 +82,19 @@ class Fragment:
             sys.exit(1)
         del self.buf[:]
 
-        #print '{'
+        #print('{')
         #for token in self.tokens:
-        #    print '\t' + str(token)
-        #print '}'
+        #    print('\t' + str(token))
+        #print('}')
 
         tokens = self.tokenizer.tokens
 
         try:
           if not tokens:
             pass
-            #print
-            #print '// empty'
-            #print
+            #print()
+            #print('// empty')
+            #print()
           elif (tokens[-1] == token.NEWLINE and
                 tokens[-2] == token.SEMICOLON) \
                   or isinstance(tokens[-1], list) \
@@ -104,10 +104,10 @@ class Fragment:
             else:
                 body = stmt.parse_block(tokens, stmt.parse_statement)
             if do_print:
-                print
+                print()
                 for statement in body:
                     statement.__print__('')
-                print
+                print()
             if is_shared_pseudocode:
                 for declaration in body:
                     ns.process(declaration)
@@ -116,9 +116,9 @@ class Fragment:
             expression = tstream.parse(tokens, 0, len(tokens) - 1,
                                        expr.parse_ternary)
             if do_print:
-                print
-                print str(expression)
-                print
+                print()
+                print(str(expression))
+                print()
         except ParseError as e:
             e.report()
             sys.exit(1)
@@ -131,26 +131,26 @@ def parse_file(path, is_shared_pseudocode, do_print):
     p = xml.parsers.expat.ParserCreate(namespace_separator = '!')
 
     def XmlDeclHandler(version, encoding, standalone):
-        #print 'XmlDecl', repr(version), repr(encoding), repr(standalone)
+        #print('XmlDecl', repr(version), repr(encoding), repr(standalone))
         pass
 
     def StartDoctypeDeclHandler(doctypeName, systemId, publicId, has_internal_subset):
-        #print 'StartDoctypeDecl', repr(doctypeName), repr(systemId), repr(publicId), repr(has_internal_subset)
+        #print('StartDoctypeDecl', repr(doctypeName), repr(systemId), repr(publicId), repr(has_internal_subset))
         pass
 
     def EndDoctypeDeclHandler():
-        #print 'EndDoctypeDecl'
+        #print('EndDoctypeDecl')
         pass
 
     def ElementDeclHandler(name, model):
-        print 'ElementDecl', repr(name), repr(model)
+        print('ElementDecl', repr(name), repr(model))
 
     def AttlistDeclHandler(elname, attname, type, default, required):
-        print 'AttlistDecl', repr(elname), repr(attname), repr(type), repr(default), repr(required)
+        print('AttlistDecl', repr(elname), repr(attname), repr(type), repr(default), repr(required))
 
     def StartElementHandler(name, attributes):
         global container, fragment
-        #print 'StartElement', repr(name), repr(attributes)
+        #print('StartElement', repr(name), repr(attributes))
         if name == 'ps':
             if fragment is not None:
                 log.error('ps tag inside pstext tag')
@@ -173,7 +173,7 @@ def parse_file(path, is_shared_pseudocode, do_print):
 
     def EndElementHandler(name):
         global container, fragment
-        #print 'EndElement', repr(name)
+        #print('EndElement', repr(name))
         if name == 'ps':
             if container is None:
                 log.error('closing ps tag without opening tag')
@@ -187,7 +187,7 @@ def parse_file(path, is_shared_pseudocode, do_print):
             fragment.end_element(name)
 
     def ProcessingInstructionHandler(target, data):
-        #print 'ProcessingInstruction', repr(target), repr(data)
+        #print('ProcessingInstruction', repr(target), repr(data))
         pass
 
     def CharacterDataHandler(data):
@@ -203,43 +203,43 @@ def parse_file(path, is_shared_pseudocode, do_print):
                                 '    when ')
         if fragment is not None:
             fragment.character_data(data)
-        #print 'CharacterData', repr(data)
+        #print('CharacterData', repr(data))
 
     def UnparsedEntityDeclHandler(entityName, base, systemId, publicId, notationName):
-        print 'UnparsedEntityDecl', repr(entityName), repr(base), repr(systemId), repr(publicId), repr(notationName)
+        print('UnparsedEntityDecl', repr(entityName), repr(base), repr(systemId), repr(publicId), repr(notationName))
 
     def EntityDeclHandler(entityName, is_parameter_entity, value, base, systemId, publicId, notationName):
-        print 'EntityDecl', repr(entityName), repr(is_parameter_entity), repr(value), repr(base), repr(systemId), repr(publicId), repr(notationName)
+        print('EntityDecl', repr(entityName), repr(is_parameter_entity), repr(value), repr(base), repr(systemId), repr(publicId), repr(notationName))
 
     def NotationDeclHandler(notationName, base, systemId, publicId):
-        print 'NotationDecl', repr(notationName), repr(base), repr(systemId), repr(publicId)
+        print('NotationDecl', repr(notationName), repr(base), repr(systemId), repr(publicId))
 
     def StartNamespaceDeclHandler(prefix, uri):
-        print 'StartNamespaceDecl', repr(prefix), repr(uri)
+        print('StartNamespaceDecl', repr(prefix), repr(uri))
 
     def EndNamespaceDeclHandler(prefix):
-        print 'EndNamespaceDecl', repr(prefix)
+        print('EndNamespaceDecl', repr(prefix))
 
     def CommentHandler(data):
-        #print 'Comment', repr(data)
+        #print('Comment', repr(data))
         pass
 
     def StartCdataSectionHandler():
-        print 'StartCdataSection'
+        print('StartCdataSection')
 
     def EndCdataSectionHandler():
-        print 'EndCdataSection'
+        print('EndCdataSection')
 
     def DefaultHandler(data):
         if data.strip('\n'):
             log.error('Unexpected toplevel data: %s' % repr(data))
 
     def NotStandaloneHandler():
-        #print 'NotStandalone'
+        #print('NotStandalone')
         return 1
 
     def ExternalEntityRefHandler(context, base, systemId, publicId):
-        print 'ExternalEntityRef', repr(context), repr(base), repr(systemId), repr(publicId)
+        print('ExternalEntityRef', repr(context), repr(base), repr(systemId), repr(publicId))
         return 0
 
     p.XmlDeclHandler = XmlDeclHandler
@@ -263,7 +263,7 @@ def parse_file(path, is_shared_pseudocode, do_print):
     p.NotStandaloneHandler = NotStandaloneHandler
     p.ExternalEntityRefHandler = ExternalEntityRefHandler
 
-    f = open(path)
+    f = open(path, 'rb')
 
     log.p = p
     try:
@@ -280,8 +280,8 @@ def main():
         if not fn.endswith('.xml') or fn == 'onebigfile.xml':
             continue
         path = os.path.join(base_dir, fn)
-        #print
-        #print '###', path
+        #print()
+        #print('###', path)
         parse_file(path, fn == 'shared_pseudocode.xml', fn == 'ldm_u.xml')
 
     #ns.global_ns.__print__('| ')

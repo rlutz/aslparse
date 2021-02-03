@@ -1,50 +1,51 @@
-import token
+import sys
+from . import token
 from . import LexError
 
-NEWLINE = intern('\\n')
+NEWLINE = sys.intern('\\n')
 # '\t', '\r', ' ': whitespace
-EXCLAMATION_MARK = intern('!')
-#QUOTATION_MARK = intern('"')
-#HASH = intern('#')
-#DOLLAR = intern('$')
-#PERCENT = intern('%')
-AMPERSAND = intern('&')
-DOUBLE_AMPERSAND = intern('&&')
+EXCLAMATION_MARK = sys.intern('!')
+#QUOTATION_MARK = sys.intern('"')
+#HASH = sys.intern('#')
+#DOLLAR = sys.intern('$')
+#PERCENT = sys.intern('%')
+AMPERSAND = sys.intern('&')
+DOUBLE_AMPERSAND = sys.intern('&&')
 # '\'': bit vector # APOSTROPHE
-OPAREN = intern('(')
-CPAREN = intern(')')
-ASTERISK = intern('*')
-PLUS = intern('+')
-PLUS_COLON = intern('+:')
-COMMA = intern(',')
-HYPHEN = intern('-')
-PERIOD = intern('.')
-DOUBLE_PERIOD = intern('..')
-SLASH = intern('/')
-COLON = intern(':')
-SEMICOLON = intern(';')
-LESS = intern('<')
-DOUBLE_LESS = intern('<<')
-LESS_EQUALS = intern('<=')
-EQUALS = intern('=')
-DOUBLE_EQUALS = intern('==')
-EXCLAMATION_EQUALS = intern('!=')
-GREATER = intern('>')
-DOUBLE_GREATER = intern('>>')
-GREATER_EQUALS = intern('>=')
-#QUESTION_MARK = intern('?')
-#AT = intern('@')
-OBRACKET = intern('[')
-#DOUBLE_BACKSLASH = intern('\\')
-CBRACKET = intern(']')
-CARET = intern('^')
-#UNDERSCORE = intern('_')
-#BACKTICK = intern('`')
-OBRACE = intern('{')
-VBAR = intern('|')
-DOUBLE_VBAR = intern('||')
-CBRACE = intern('}')
-#TILDE = intern('~')
+OPAREN = sys.intern('(')
+CPAREN = sys.intern(')')
+ASTERISK = sys.intern('*')
+PLUS = sys.intern('+')
+PLUS_COLON = sys.intern('+:')
+COMMA = sys.intern(',')
+HYPHEN = sys.intern('-')
+PERIOD = sys.intern('.')
+DOUBLE_PERIOD = sys.intern('..')
+SLASH = sys.intern('/')
+COLON = sys.intern(':')
+SEMICOLON = sys.intern(';')
+LESS = sys.intern('<')
+DOUBLE_LESS = sys.intern('<<')
+LESS_EQUALS = sys.intern('<=')
+EQUALS = sys.intern('=')
+DOUBLE_EQUALS = sys.intern('==')
+EXCLAMATION_EQUALS = sys.intern('!=')
+GREATER = sys.intern('>')
+DOUBLE_GREATER = sys.intern('>>')
+GREATER_EQUALS = sys.intern('>=')
+#QUESTION_MARK = sys.intern('?')
+#AT = sys.intern('@')
+OBRACKET = sys.intern('[')
+#DOUBLE_BACKSLASH = sys.intern('\\')
+CBRACKET = sys.intern(']')
+CARET = sys.intern('^')
+#UNDERSCORE = sys.intern('_')
+#BACKTICK = sys.intern('`')
+OBRACE = sys.intern('{')
+VBAR = sys.intern('|')
+DOUBLE_VBAR = sys.intern('||')
+CBRACE = sys.intern('}')
+#TILDE = sys.intern('~')
 
 
 class ReservedWord:
@@ -160,11 +161,11 @@ for s in ['AND',
           'until',
           'when',
           'while']:
-    s = intern(s)
+    s = sys.intern(s)
     rw[s] = token.intern_token(s, token.ReservedWord)
 
 # 'type' is a reserved word but can also be used as an identifier
-s = intern('type')
+s = sys.intern('type')
 rw[s] = token.intern_token(s, token.Identifier)
 
 
@@ -445,7 +446,7 @@ class Tokenizer:
                 raise LexError(data, pos)
 
 
-        #print 'Character data: ', repr(data)
+        #print('Character data: ', repr(data))
 
     def process_a(self, data):
         if self.inside_string is not None:

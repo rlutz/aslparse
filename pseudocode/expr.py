@@ -1,4 +1,4 @@
-import token, expr, dtype
+from . import token, expr, dtype
 from . import ParseError
 
 class Identifier:

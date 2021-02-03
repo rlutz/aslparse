@@ -1,13 +1,13 @@
-import decl, ns
+from . import decl, ns
 
 class Namespace:
     def __init__(self):
         self.members = {}
 
     def __print__(self, indent):
-        print 'namespace'
-        for name, value in sorted(self.members.iteritems()):
-            print indent + name + ':',
+        print('namespace')
+        for name, value in sorted(self.members.items()):
+            print(indent + name + ':', end = ' ')
             value.__print__(indent + '    ')
 
 class Function:
@@ -15,9 +15,9 @@ class Function:
         self.signatures = []
 
     def __print__(self, indent):
-        print 'function'
+        print('function')
         for signature, decl in self.signatures:
-            print indent + signature
+            print(indent + signature)
 
 class Accessor:
     def __init__(self):
@@ -25,27 +25,27 @@ class Accessor:
         self.getter = None
 
     def __print__(self, indent):
-        print 'accessor'
+        print('accessor')
 
 class Variable:
     def __print__(self, indent):
-        print 'variable'
+        print('variable')
 
 class Array:
     def __print__(self, indent):
-        print 'array'
+        print('array')
 
 class Enumeration:
     def __print__(self, indent):
-        print 'enumeration'
+        print('enumeration')
 
 class Struct:
     def __print__(self, indent):
-        print 'struct'
+        print('struct')
 
 class Type:
     def __print__(self, indent):
-        print 'type'
+        print('type')
 
 implicit = [
     'CONTEXTIDR_EL2',
@@ -135,7 +135,7 @@ def process(declaration):
             assert isinstance(accessor, ns.Accessor)
 
             if declaration.functype == decl.GETTER:
-                #print '.'.join(str(part) for part in declaration.name)
+                #print('.'.join(str(part) for part in declaration.name))
                 #assert accessor.getter is None
                 accessor.getter = 1
             elif declaration.functype == decl.SETTER:

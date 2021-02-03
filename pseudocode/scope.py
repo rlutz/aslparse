@@ -1,4 +1,4 @@
-import expr, stmt, dtype, decl, ns, scope
+from . import expr, stmt, dtype, decl, ns, scope
 
 class SemanticError(Exception):
     pass
@@ -123,18 +123,18 @@ class Scope:
 
 
 def process_namespace(namespace):
-    for name, value in sorted(namespace.members.iteritems()):
-        #print
-        #print '###', name
+    for name, value in sorted(namespace.members.items()):
+        #print()
+        #print('###', name)
         process_declaration(value)
 
 def process_declaration(declaration):
     if not isinstance(declaration, ns.Function):
         return
     for signature, declaration in declaration.signatures:
-        #print name
-        #print signature
-        #print declaration.__class__.__name__
+        #print(name)
+        #print(signature)
+        #print(declaration.__class__.__name__)
         if declaration.body is None:
             continue
         scope = Scope(declaration)
@@ -203,7 +203,7 @@ def process_lhs(expression, scope):
         try:
             scope.resolve(expression.name)
         except ns.LookupError:
-            print "can't lookup", str(expression.name)
+            print("can't lookup", str(expression.name))
         else:
             pass#print "OK", str(expression.name)
     elif isinstance(expression, expr.QualifiedIdentifier):
@@ -244,7 +244,7 @@ def process_expression(expression, scope):
         try:
             scope.resolve(expression.name)
         except ns.LookupError:
-            print "can't lookup", str(expression.name)
+            print("can't lookup", str(expression.name))
         else:
             pass#print "OK", str(expression.name)
     elif isinstance(expression, expr.QualifiedIdentifier):
