@@ -118,7 +118,7 @@ class Scope:
         except ns.LookupError:
             pass
         else:
-            print 'OVERRIDING "%s"' % str(lhs.name)
+            pass # print 'OVERRIDING "%s"' % str(lhs.name)
         self.local_dict[lhs.name.name] = None
 
 

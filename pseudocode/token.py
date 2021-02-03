@@ -52,56 +52,56 @@ class ReservedWord:
         self.name = name
 
     def __str__(self):
-        return self.name # 'rw:' + self.name
+        return 'rw:' + self.name
 
 class Identifier:
     def __init__(self, name):
         self.name = name
 
     def __str__(self):
-        return self.name # 'id:' + self.name
+        return 'id:' + self.name
 
 class LinkedIdentifier:
     def __init__(self, name):
         self.name = name
 
     def __str__(self):
-        return self.name # 'a:' + self.name
+        return 'a:' + self.name
 
 class DeclarationIdentifier:
     def __init__(self, name):
         self.name = name
 
     def __str__(self):
-        return self.name # 'decl:' + self.name
+        return 'decl:' + self.name
 
 class Number:
     def __init__(self, name):
         self.name = name
 
     def __str__(self):
-        return self.name # 'num:' + self.name
+        return 'num:' + self.name
 
 class HexadecimalNumber:
     def __init__(self, name):
         self.name = name
 
     def __str__(self):
-        return '0x' + self.name # 'num:' + self.name
+        return 'num:' + self.name
 
 class Bitvector:
     def __init__(self, name):
         self.name = name
 
     def __str__(self):
-        return "'%s'" % self.name # 'bv:' + self.name
+        return 'bv:' + self.name
 
 class String:
     def __init__(self, data):
         self.data = data
 
     def __str__(self):
-        return '"' + self.data + '"' # 'str:"' + self.data + '"'
+        return 'str:"' + self.data + '"'
 
 
 def intern_token(name, t):

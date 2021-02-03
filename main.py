@@ -73,7 +73,7 @@ class Fragment:
             sys.exit(1)
         del self.buf[:]
 
-    def end(self, is_shared_pseudocode):
+    def end(self, is_shared_pseudocode, do_print):
         try:
             self.tokenizer.process(''.join(self.buf) + '\n')
             self.tokenizer.process_end()
@@ -103,10 +103,11 @@ class Fragment:
                 body = stmt.parse_block(tokens, decl.parse)
             else:
                 body = stmt.parse_block(tokens, stmt.parse_statement)
-            #print
-            #for statement in body:
-            #    statement.__print__('')
-            #print
+            if do_print:
+                print
+                for statement in body:
+                    statement.__print__('')
+                print
             if is_shared_pseudocode:
                 for declaration in body:
                     ns.process(declaration)
@@ -114,9 +115,10 @@ class Fragment:
             assert tokens[-1] == token.NEWLINE
             expression = tstream.parse(tokens, 0, len(tokens) - 1,
                                        expr.parse_ternary)
-            #print
-            #print str(expression)
-            #print
+            if do_print:
+                print
+                print str(expression)
+                print
         except ParseError as e:
             e.report()
             sys.exit(1)
@@ -125,7 +127,7 @@ class Fragment:
 container = None
 fragment = None
 
-def parse_file(path, is_shared_pseudocode):
+def parse_file(path, is_shared_pseudocode, do_print):
     p = xml.parsers.expat.ParserCreate(namespace_separator = '!')
 
     def XmlDeclHandler(version, encoding, standalone):
@@ -179,7 +181,7 @@ def parse_file(path, is_shared_pseudocode):
         elif name == 'pstext':
             if fragment is None:
                 log.error('closing pstext tag without opening tag')
-            fragment.end(is_shared_pseudocode)
+            fragment.end(is_shared_pseudocode, do_print)
             fragment = None
         elif fragment is not None:
             fragment.end_element(name)
@@ -280,7 +282,7 @@ def main():
         path = os.path.join(base_dir, fn)
         #print
         #print '###', path
-        parse_file(path, fn == 'shared_pseudocode.xml')
+        parse_file(path, fn == 'shared_pseudocode.xml', fn == 'ldm_u.xml')
 
     #ns.global_ns.__print__('| ')
 
