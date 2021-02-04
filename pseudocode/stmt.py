@@ -445,12 +445,12 @@ def parse_block(tokens, parse_func):
             if t == token.SEMICOLON:
                 if tokens[start] == token.rw['when'] or \
                    tokens[start] == token.rw['otherwise']:
-                    if tokens[pos] == token.NEWLINE:
+                    if pos < len(tokens) and tokens[pos] == token.NEWLINE:
                         pos += 1
                         break
                     continue
 
-                if tokens[pos] == token.NEWLINE:
+                if pos < len(tokens) and tokens[pos] == token.NEWLINE:
                     pos += 1
 
                 if pos < len(tokens) and (tokens[pos] == token.rw['elsif'] or
