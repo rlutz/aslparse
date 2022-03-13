@@ -130,32 +130,8 @@ container = None
 fragment = None
 
 def parse_file(path, is_shared_pseudocode, do_print):
-    p = xml.parsers.expat.ParserCreate(namespace_separator = '!')
-
-    def XmlDeclHandler(version, encoding, standalone):
-        #print('XmlDecl', repr(version), repr(encoding), repr(standalone))
-        pass
-
-    def StartDoctypeDeclHandler(doctypeName,
-                                systemId, publicId, has_internal_subset):
-        #print('StartDoctypeDecl', repr(doctypeName),
-        #      repr(systemId), repr(publicId), repr(has_internal_subset))
-        pass
-
-    def EndDoctypeDeclHandler():
-        #print('EndDoctypeDecl')
-        pass
-
-    def ElementDeclHandler(name, model):
-        print('ElementDecl', repr(name), repr(model))
-
-    def AttlistDeclHandler(elname, attname, type, default, required):
-        print('AttlistDecl', repr(elname), repr(attname), repr(type),
-                             repr(default), repr(required))
-
     def StartElementHandler(name, attributes):
         global container, fragment
-        #print('StartElement', repr(name), repr(attributes))
         if name == 'ps':
             if fragment is not None:
                 log.error('ps tag inside pstext tag')
@@ -178,7 +154,6 @@ def parse_file(path, is_shared_pseudocode, do_print):
 
     def EndElementHandler(name):
         global container, fragment
-        #print('EndElement', repr(name))
         if name == 'ps':
             if container is None:
                 log.error('closing ps tag without opening tag')
@@ -190,10 +165,6 @@ def parse_file(path, is_shared_pseudocode, do_print):
             fragment = None
         elif fragment is not None:
             fragment.end_element(name)
-
-    def ProcessingInstructionHandler(target, data):
-        #print('ProcessingInstruction', repr(target), repr(data))
-        pass
 
     def CharacterDataHandler(data):
         # some files contain indentation errors
@@ -208,72 +179,11 @@ def parse_file(path, is_shared_pseudocode, do_print):
                                 '    when ')
         if fragment is not None:
             fragment.character_data(data)
-        #print('CharacterData', repr(data))
 
-    def UnparsedEntityDeclHandler(entityName,
-                                  base, systemId, publicId, notationName):
-        print('UnparsedEntityDecl', repr(entityName),
-              repr(base), repr(systemId), repr(publicId), repr(notationName))
-
-    def EntityDeclHandler(entityName, is_parameter_entity, value,
-                          base, systemId, publicId, notationName):
-        print('EntityDecl',
-              repr(entityName), repr(is_parameter_entity), repr(value),
-              repr(base), repr(systemId), repr(publicId), repr(notationName))
-
-    def NotationDeclHandler(notationName, base, systemId, publicId):
-        print('NotationDecl', repr(notationName),
-              repr(base), repr(systemId), repr(publicId))
-
-    def StartNamespaceDeclHandler(prefix, uri):
-        print('StartNamespaceDecl', repr(prefix), repr(uri))
-
-    def EndNamespaceDeclHandler(prefix):
-        print('EndNamespaceDecl', repr(prefix))
-
-    def CommentHandler(data):
-        #print('Comment', repr(data))
-        pass
-
-    def StartCdataSectionHandler():
-        print('StartCdataSection')
-
-    def EndCdataSectionHandler():
-        print('EndCdataSection')
-
-    def DefaultHandler(data):
-        if data.strip('\n'):
-            log.error('Unexpected toplevel data: %s' % repr(data))
-
-    def NotStandaloneHandler():
-        #print('NotStandalone')
-        return 1
-
-    def ExternalEntityRefHandler(context, base, systemId, publicId):
-        print('ExternalEntityRef', repr(context),
-              repr(base), repr(systemId), repr(publicId))
-        return 0
-
-    p.XmlDeclHandler = XmlDeclHandler
-    p.StartDoctypeDeclHandler = StartDoctypeDeclHandler
-    p.EndDoctypeDeclHandler = EndDoctypeDeclHandler
-    p.ElementDeclHandler = ElementDeclHandler
-    p.AttlistDeclHandler = AttlistDeclHandler
+    p = xml.parsers.expat.ParserCreate(namespace_separator = '!')
     p.StartElementHandler = StartElementHandler
     p.EndElementHandler = EndElementHandler
-    p.ProcessingInstructionHandler = ProcessingInstructionHandler
     p.CharacterDataHandler = CharacterDataHandler
-    p.UnparsedEntityDeclHandler = UnparsedEntityDeclHandler
-    p.EntityDeclHandler = EntityDeclHandler
-    p.NotationDeclHandler = NotationDeclHandler
-    p.StartNamespaceDeclHandler = StartNamespaceDeclHandler
-    p.EndNamespaceDeclHandler = EndNamespaceDeclHandler
-    p.CommentHandler = CommentHandler
-    p.StartCdataSectionHandler = StartCdataSectionHandler
-    p.EndCdataSectionHandler = EndCdataSectionHandler
-    p.DefaultHandler = DefaultHandler
-    p.NotStandaloneHandler = NotStandaloneHandler
-    p.ExternalEntityRefHandler = ExternalEntityRefHandler
 
     f = open(path, 'rb')
 
