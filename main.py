@@ -92,35 +92,35 @@ class Fragment:
         tokens = self.tokenizer.tokens
 
         try:
-          if not tokens:
-            pass
-            #print()
-            #print('// empty')
-            #print()
-          elif (tokens[-1] == token.NEWLINE and
-                tokens[-2] == token.SEMICOLON) \
-                  or isinstance(tokens[-1], list) \
-                  or tokens[0] == token.rw['type']:
-            if is_shared_pseudocode:
-                body = stmt.parse_block(tokens, decl.parse)
+            if not tokens:
+                pass
+                #print()
+                #print('// empty')
+                #print()
+            elif (tokens[-1] == token.NEWLINE and
+                  tokens[-2] == token.SEMICOLON) \
+                    or isinstance(tokens[-1], list) \
+                    or tokens[0] == token.rw['type']:
+                if is_shared_pseudocode:
+                    body = stmt.parse_block(tokens, decl.parse)
+                else:
+                    body = stmt.parse_block(tokens, stmt.parse_statement)
+                if do_print:
+                    print()
+                    for statement in body:
+                        statement.__print__('')
+                    print()
+                if is_shared_pseudocode:
+                    for declaration in body:
+                        ns.process(declaration)
             else:
-                body = stmt.parse_block(tokens, stmt.parse_statement)
-            if do_print:
-                print()
-                for statement in body:
-                    statement.__print__('')
-                print()
-            if is_shared_pseudocode:
-                for declaration in body:
-                    ns.process(declaration)
-          else:
-            assert tokens[-1] == token.NEWLINE
-            expression = tstream.parse(tokens, 0, len(tokens) - 1,
-                                       expr.parse_ternary)
-            if do_print:
-                print()
-                print(str(expression))
-                print()
+                assert tokens[-1] == token.NEWLINE
+                expression = tstream.parse(tokens, 0, len(tokens) - 1,
+                                           expr.parse_ternary)
+                if do_print:
+                    print()
+                    print(str(expression))
+                    print()
         except ParseError as e:
             e.report()
             sys.exit(1)
