@@ -334,17 +334,17 @@ def parse_operand(ts):
             members = []
         ts.consume_assert(token.CBRACE)
         return expr.Set(members)
-    elif t in [token.rw['FALSE'], token.rw['TRUE'],
-               token.rw['LOW'], token.rw['HIGH']]:
+    elif t in [token.ReservedWord('FALSE'), token.ReservedWord('TRUE'),
+               token.ReservedWord('LOW'), token.ReservedWord('HIGH')]:
         return expr.Primitive(ts.consume())
 
 
     sub_ts = ts.fork()
     try:
         datatype = dtype.parse(sub_ts)
-        if sub_ts.consume_if(token.rw['UNKNOWN']):
+        if sub_ts.consume_if(token.ReservedWord('UNKNOWN')):
             expression = expr.Unknown(datatype)
-        elif sub_ts.consume_if(token.rw['IMPLEMENTATION_DEFINED']):
+        elif sub_ts.consume_if(token.ReservedWord('IMPLEMENTATION_DEFINED')):
             if isinstance(sub_ts.peek(), token.String):
                 aspect = sub_ts.consume().data
             else:
@@ -378,7 +378,8 @@ def parse_operand(ts):
 
 # Potentially: '~', '-', type casts
 
-unary_operators = [token.EXCLAMATION_MARK, token.HYPHEN, token.rw['NOT']]
+unary_operators = [token.EXCLAMATION_MARK, token.HYPHEN,
+                   token.ReservedWord('NOT')]
 
 def parse_unary(ts):
     if ts.peek() in unary_operators:
@@ -408,16 +409,18 @@ def parse_unary(ts):
 operators = [
     [token.DOUBLE_VBAR],
     [token.DOUBLE_AMPERSAND],
-    [token.rw['IN']],
-    [token.rw['OR']],
-    [token.rw['EOR']],
-    [token.rw['AND']],
+    [token.ReservedWord('IN')],
+    [token.ReservedWord('OR')],
+    [token.ReservedWord('EOR')],
+    [token.ReservedWord('AND')],
     [token.DOUBLE_EQUALS, token.EXCLAMATION_EQUALS],
     [token.LESS, token.LESS_EQUALS, token.GREATER, token.GREATER_EQUALS],
     [token.DOUBLE_LESS, token.DOUBLE_GREATER, token.COLON],
     [token.PLUS, token.HYPHEN],
-    [token.ASTERISK, token.SLASH, token.rw['DIV'], token.rw['MOD'],
-                                                   token.rw['REM']],
+    [token.ASTERISK, token.SLASH,
+     token.ReservedWord('DIV'),
+     token.ReservedWord('MOD'),
+     token.ReservedWord('REM')],
     [token.CARET],
 ]
 
@@ -453,18 +456,18 @@ def parse_binary(ts, precedence_limit = 0):
 
 def parse_ternary_segment(ts):
     condition = expr.parse_binary(ts)
-    ts.consume_assert(token.rw['then'])
+    ts.consume_assert(token.ReservedWord('then'))
     arg0 = expr.parse_binary(ts)
-    if ts.consume_if(token.rw['elsif']):
+    if ts.consume_if(token.ReservedWord('elsif')):
         arg1 = expr.parse_ternary_segment(ts)
-    elif ts.consume_if(token.rw['else']):
+    elif ts.consume_if(token.ReservedWord('else')):
         arg1 = expr.parse_ternary(ts)
     else:
         raise ParseError(ts)
     return expr.Ternary(condition, arg0, arg1)
 
 def parse_ternary(ts):
-    if ts.consume_if(token.rw['if']):
+    if ts.consume_if(token.ReservedWord('if')):
         return parse_ternary_segment(ts)
 
     return expr.parse_binary(ts)

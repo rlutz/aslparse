@@ -201,15 +201,15 @@ def parse_body(ts):
 
 def parse_if_segment(ts):
     expression = expr.parse_binary(ts)
-    ts.consume_assert(token.rw['then'])
+    ts.consume_assert(token.ReservedWord('then'))
 
     then_body = stmt.parse_body(ts)
 
     consumed_nl = ts.consume_if(token.NEWLINE)
 
-    if ts.consume_if(token.rw['elsif']):
+    if ts.consume_if(token.ReservedWord('elsif')):
         else_body = [parse_if_segment(ts)]
-    elif ts.consume_if(token.rw['else']):
+    elif ts.consume_if(token.ReservedWord('else')):
         else_body = stmt.parse_body(ts)
     elif consumed_nl:
         raise ParseError(ts)
@@ -228,7 +228,7 @@ def parse_if_segment(ts):
 #                    | 'otherwise' body
 
 def parse_case_clause(ts):
-    if ts.consume_if(token.rw['when']):
+    if ts.consume_if(token.ReservedWord('when')):
         patterns = []
         while True:
             pattern = ts.consume()
@@ -241,7 +241,7 @@ def parse_case_clause(ts):
             patterns.append(pattern)
             if not ts.consume_if(token.COMMA):
                 break
-    elif ts.consume_if(token.rw['otherwise']):
+    elif ts.consume_if(token.ReservedWord('otherwise')):
         patterns = None
     else:
         raise ParseError(ts)
@@ -287,19 +287,19 @@ def parse_case_clause(ts):
 #             | identifier-chain '(' maybe-expression-list ')' ';'
 
 def parse_statement(ts):
-    if ts.consume_if(token.rw['if']):
+    if ts.consume_if(token.ReservedWord('if')):
         return parse_if_segment(ts)
 
-    if ts.consume_if(token.rw['for']):
+    if ts.consume_if(token.ReservedWord('for')):
         var = ts.consume()
         if not isinstance(var, token.Identifier) and \
            not isinstance(var, token.LinkedIdentifier):
             raise ParseError(ts)
         ts.consume_assert(token.EQUALS)
         start = expr.parse_binary(ts)
-        if ts.consume_if(token.rw['to']):
+        if ts.consume_if(token.ReservedWord('to')):
             down = False
-        elif ts.consume_if(token.rw['downto']):
+        elif ts.consume_if(token.ReservedWord('downto')):
             down = True
         else:
             raise ParseError(ts)
@@ -307,57 +307,57 @@ def parse_statement(ts):
         body = stmt.parse_body(ts)
         return stmt.For(expr.Identifier(var), start, down, stop, body)
 
-    if ts.consume_if(token.rw['while']):
+    if ts.consume_if(token.ReservedWord('while')):
         condition = expr.parse_binary(ts)
-        ts.consume_assert(token.rw['do'])
+        ts.consume_assert(token.ReservedWord('do'))
         body = stmt.parse_body(ts)
         return stmt.While(condition, body)
 
-    if ts.consume_if(token.rw['repeat']):
+    if ts.consume_if(token.ReservedWord('repeat')):
         if not isinstance(ts.peek(), list):
             raise ParseError(ts)
         body = stmt.parse_block(ts.consume(), stmt.parse_statement)
-        ts.consume_assert(token.rw['until'])
+        ts.consume_assert(token.ReservedWord('until'))
         condition = expr.parse_binary(ts)
         ts.consume_assert(token.SEMICOLON)
         return stmt.Repeat(body, condition)
 
-    if ts.consume_if(token.rw['case']):
+    if ts.consume_if(token.ReservedWord('case')):
         expression = expr.parse_binary(ts)
-        ts.consume_assert(token.rw['of'])
+        ts.consume_assert(token.ReservedWord('of'))
         if not isinstance(ts.peek(), list):
             raise ParseError(ts)
         clauses = stmt.parse_block(ts.consume(), parse_case_clause)
         return stmt.Case(expression, clauses)
 
-    if ts.consume_if(token.rw['SEE']):
+    if ts.consume_if(token.ReservedWord('SEE')):
         s = ts.consume()
         if not isinstance(s, token.String):
             raise ParseError(ts)
         ts.consume_assert(token.SEMICOLON)
         return stmt.See(s.data)
 
-    if ts.consume_if(token.rw['UNDEFINED']):
+    if ts.consume_if(token.ReservedWord('UNDEFINED')):
         ts.consume_assert(token.SEMICOLON)
         return stmt.Undefined()
 
-    if ts.consume_if(token.rw['UNPREDICTABLE']):
+    if ts.consume_if(token.ReservedWord('UNPREDICTABLE')):
         ts.consume_assert(token.SEMICOLON)
         return stmt.Unpredictable()
 
-    if ts.consume_if(token.rw['IMPLEMENTATION_DEFINED']):
+    if ts.consume_if(token.ReservedWord('IMPLEMENTATION_DEFINED')):
         if not isinstance(ts.peek(), token.String):
             raise ParseError(ts)
         aspect = ts.consume().data
         ts.consume_assert(token.SEMICOLON)
         return stmt.ImplementationDefined(aspect)
 
-    if ts.consume_if(token.rw['assert']):
+    if ts.consume_if(token.ReservedWord('assert')):
         expression = expr.parse_ternary(ts)
         ts.consume_assert(token.SEMICOLON)
         return stmt.Assert(expression)
 
-    if ts.consume_if(token.rw['return']):
+    if ts.consume_if(token.ReservedWord('return')):
         if ts.peek() == token.SEMICOLON:
             value = None
         else:
@@ -365,7 +365,7 @@ def parse_statement(ts):
         ts.consume_assert(token.SEMICOLON)
         return stmt.Return(value)
 
-    if ts.consume_if(token.rw['constant']):
+    if ts.consume_if(token.ReservedWord('constant')):
         datatype = dtype.parse(ts)
         lhs = expr.parse_identifier_chain(ts)
         ts.consume_assert(token.EQUALS)
@@ -373,7 +373,7 @@ def parse_statement(ts):
         ts.consume_assert(token.SEMICOLON)
         return stmt.ConstantAssignment(datatype, lhs, expression)
 
-    if ts.peek() == token.rw['enumeration']:
+    if ts.peek() == token.ReservedWord('enumeration'):
         return stmt.LocalDeclaration(decl.parse(ts))
 
     sub_ts = ts.fork()
@@ -428,23 +428,24 @@ def parse_block(tokens, parse_func):
             pos += 1
 
             if isinstance(t, list):
-                if pos < len(tokens) and (tokens[pos] == token.rw['elsif'] or
-                                          tokens[pos] == token.rw['else'] or
-                                          tokens[pos] == token.rw['until']):
+                if pos < len(tokens) and (
+                        tokens[pos] == token.ReservedWord('elsif') or
+                        tokens[pos] == token.ReservedWord('else') or
+                        tokens[pos] == token.ReservedWord('until')):
                     continue
                 break
 
             if pos == len(tokens) or t == token.NEWLINE:
-                if tokens[0] == token.rw['type']:
+                if tokens[0] == token.Identifier('type'):
                     break
-                if tokens[0] == token.rw['when']:
+                if tokens[0] == token.ReservedWord('when'):
                     # empty case clause
                     break
                 raise ParseError(tstream.TokenStream(tokens, pos, pos))
 
             if t == token.SEMICOLON:
-                if tokens[start] == token.rw['when'] or \
-                   tokens[start] == token.rw['otherwise']:
+                if tokens[start] == token.ReservedWord('when') or \
+                   tokens[start] == token.ReservedWord('otherwise'):
                     if pos < len(tokens) and tokens[pos] == token.NEWLINE:
                         pos += 1
                         break
@@ -453,9 +454,10 @@ def parse_block(tokens, parse_func):
                 if pos < len(tokens) and tokens[pos] == token.NEWLINE:
                     pos += 1
 
-                if pos < len(tokens) and (tokens[pos] == token.rw['elsif'] or
-                                          tokens[pos] == token.rw['else'] or
-                                          tokens[pos] == token.rw['until']):
+                if pos < len(tokens) and (
+                        tokens[pos] == token.ReservedWord('elsif') or
+                        tokens[pos] == token.ReservedWord('else') or
+                        tokens[pos] == token.ReservedWord('until')):
                     continue
                 break
 

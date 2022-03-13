@@ -134,12 +134,6 @@ class Nonalpha(Token):
     def __str__(self):
         return self.data
 
-rw = {}
-for s in RESERVED_WORDS:
-    rw[s] = token.ReservedWord(s)
-for s in MAYBE_RESERVED_WORDS:
-    rw[s] = token.Identifier(s)
-
 NEWLINE = token.Nonalpha('\\n')
 # '\t', '\r', ' ': whitespace
 EXCLAMATION_MARK = token.Nonalpha('!')
@@ -211,9 +205,9 @@ class Tokenizer:
                         break
                     n += 1
                 name = data[pos:pos + n]
-                try:
-                    t = token.rw[name]
-                except KeyError:
+                if name in RESERVED_WORDS:
+                    t = token.ReservedWord(name)
+                else:
                     t = token.Identifier(name)
                 self.tokens.append(t)
                 pos += n
@@ -247,11 +241,12 @@ class Tokenizer:
                 # ignore irregular line break inside 'if' condition
                 t = None
                 for t in reversed(self.tokens):
-                    if t == token.rw['if'] or \
-                       t == token.rw['elsif'] or \
-                       t == token.rw['then']:
+                    if t == token.ReservedWord('if') or \
+                       t == token.ReservedWord('elsif') or \
+                       t == token.ReservedWord('then'):
                         break
-                if t == token.rw['if'] or t == token.rw['elsif']:
+                if t == token.ReservedWord('if') or \
+                   t == token.ReservedWord('elsif'):
                     continue
                 if data.startswith(' ', pos):
                     raise LexError(data, pos)

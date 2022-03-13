@@ -155,7 +155,7 @@ def parse_name(ts):
     return name, overload
 
 def parse(ts):
-    if ts.consume_if(token.rw['constant']):
+    if ts.consume_if(token.ReservedWord('constant')):
         datatype = dtype.parse(ts)
         variables = []
         while True:
@@ -168,7 +168,7 @@ def parse(ts):
         ts.consume_assert(token.SEMICOLON)
         return decl.Variable(True, datatype, variables)
 
-    if ts.consume_if(token.rw['enumeration']):
+    if ts.consume_if(token.ReservedWord('enumeration')):
         name = ts.consume()
         if not isinstance(name, token.Identifier) and \
            not isinstance(name, token.DeclarationIdentifier):
@@ -187,7 +187,7 @@ def parse(ts):
         ts.consume_assert(token.SEMICOLON)
         return decl.Enumeration(name, values)
 
-    if ts.consume_if(token.rw['type']):
+    if ts.consume_if(token.Identifier('type')):
         name, overload = parse_name(ts)
         if ts.consume_if(token.SEMICOLON):
             return decl.Type(name, None)
@@ -195,7 +195,7 @@ def parse(ts):
             datatype = dtype.parse(ts)
             ts.consume_assert(token.SEMICOLON)
             return decl.TypeEquals(name, datatype)
-        elif ts.consume_if(token.rw['is']):
+        elif ts.consume_if(token.ReservedWord('is')):
             ts.consume_assert(token.OPAREN)
             fields = []
             while True:
@@ -212,7 +212,7 @@ def parse(ts):
         else:
             raise ParseError(ts)
 
-    if ts.consume_if(token.rw['array']):
+    if ts.consume_if(token.ReservedWord('array')):
         base_type = dtype.parse(ts)
         name = []
         while True:

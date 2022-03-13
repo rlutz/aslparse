@@ -62,19 +62,19 @@ dt_void = dtype.Void()
 # datatype-list :== datatype | datatype-list ',' datatype
 
 def parse(ts):
-    if ts.consume_if(token.rw['bit']):
+    if ts.consume_if(token.ReservedWord('bit')):
         return dtype.dt_bit
 
-    if ts.consume_if(token.rw['bits']):
+    if ts.consume_if(token.ReservedWord('bits')):
         ts.consume_assert(token.OPAREN)
         expression = expr.parse_ternary(ts)
         ts.consume_assert(token.CPAREN)
         return dtype.Bits(expression)
 
-    if ts.consume_if(token.rw['boolean']):
+    if ts.consume_if(token.ReservedWord('boolean')):
         return dtype.dt_boolean
 
-    if ts.consume_if(token.rw['integer']):
+    if ts.consume_if(token.ReservedWord('integer')):
         return dtype.dt_integer
 
     if ts.consume_if(token.OPAREN):

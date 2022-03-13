@@ -100,7 +100,7 @@ class Fragment:
             elif (tokens[-1] == token.NEWLINE and
                   tokens[-2] == token.SEMICOLON) \
                     or isinstance(tokens[-1], list) \
-                    or tokens[0] == token.rw['type']:
+                    or tokens[0] == token.Identifier('type'):
                 if is_shared_pseudocode:
                     body = stmt.parse_block(tokens, decl.parse)
                 else:
