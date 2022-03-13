@@ -18,6 +18,9 @@ class Fragment:
         self.buf = []
         self.inside_element = None
 
+        self.body = None
+        self.expression = None
+
     def character_data(self, data):
         self.buf.append(data)
 
@@ -51,7 +54,7 @@ class Fragment:
             sys.exit(1)
         del self.buf[:]
 
-    def end(self, is_shared_pseudocode, do_print):
+    def end(self, is_shared_pseudocode):
         try:
             self.tokenizer.process(''.join(self.buf) + '\n')
             self.tokenizer.process_end()
@@ -70,34 +73,21 @@ class Fragment:
         try:
             if not tokens:
                 pass
-                #print()
-                #print('// empty')
-                #print()
             elif (tokens[-1] == token.NEWLINE and
                   tokens[-2] == token.Nonalpha(';')) \
                     or isinstance(tokens[-1], list) \
                     or tokens[0] == token.Identifier('type'):
                 if is_shared_pseudocode:
-                    body = stmt.parse_block(tokens, decl.parse)
+                    self.body = stmt.parse_block(tokens, decl.parse)
                 else:
-                    body = stmt.parse_block(tokens, stmt.parse_statement)
-                if do_print:
-                    print()
-                    for statement in body:
-                        for l in statement.dump():
-                            print(l)
-                    print()
+                    self.body = stmt.parse_block(tokens, stmt.parse_statement)
                 if is_shared_pseudocode:
-                    for declaration in body:
+                    for declaration in self.body:
                         ns.process(declaration)
             else:
                 assert tokens[-1] == token.NEWLINE
-                expression = tstream.parse(tokens, 0, len(tokens) - 1,
-                                           expr.parse_ternary)
-                if do_print:
-                    print()
-                    print(str(expression))
-                    print()
+                self.expression = tstream.parse(tokens, 0, len(tokens) - 1,
+                                                expr.parse_ternary)
         except ParseError as e:
             e.report()
             sys.exit(1)
@@ -112,14 +102,14 @@ class Container:
         self.fragment = None
 
 class FileProcessor:
-    def __init__(self, path, is_shared_pseudocode, do_print):
+    def __init__(self, path, is_shared_pseudocode):
         self.path = path
         self.is_shared_pseudocode = is_shared_pseudocode
-        self.do_print = do_print
 
         self.lineno = None
         self.container = None
         self.fragment = None
+        self.fragments = []
 
         self.p = xml.parsers.expat.ParserCreate(namespace_separator = '!')
         self.p.StartElementHandler = self.StartElementHandler
@@ -144,6 +134,7 @@ class FileProcessor:
             if self.fragment is not None:
                 self.error('pstext tag inside another pstext tag')
             self.fragment = Fragment(self, **attributes)
+            self.fragments.append(self.fragment)
             if self.container is not None:
                 if self.container.fragment is not None:
                     self.error('multiple pstext tags inside ps tag')
@@ -163,7 +154,7 @@ class FileProcessor:
         elif name == 'pstext':
             if self.fragment is None:
                 self.error('closing pstext tag without opening tag')
-            self.fragment.end(self.is_shared_pseudocode, self.do_print)
+            self.fragment.end(self.is_shared_pseudocode)
             self.fragment = None
         elif self.fragment is not None:
             self.fragment.end_element(name)
@@ -194,7 +185,24 @@ def main(base_dir):
         path = os.path.join(base_dir, fn)
         #print()
         #print('###', path)
-        FileProcessor(path, fn == 'shared_pseudocode.xml', fn == 'ldm_u.xml')
+        file_processor = FileProcessor(path, fn == 'shared_pseudocode.xml')
+
+        if fn == 'ldm_u.xml':
+            for fragment in file_processor.fragments:
+                if fragment.body is not None:
+                    print()
+                    for statement in fragment.body:
+                        for l in statement.dump():
+                            print(l)
+                    print()
+                elif fragment.expression is not None:
+                    print()
+                    print(str(fragment.expression))
+                    print()
+                else:
+                    print()
+                    print('// empty')
+                    print()
 
     #for l in ns.global_ns.dump():
     #    print('| ' + l)
