@@ -10,9 +10,21 @@ class Fragment:
                  mayhavelinks, section = None, rep_section = None):
         self.file_processor = file_processor
 
-        self.mayhavelinks = mayhavelinks  # '1'
-        self.section = section            # 'Decode' / 'Execute'
-        self.rep_section = rep_section    # 'decode' / 'execute'
+        if file_processor.container is None:
+            self.name = None
+            assert section is None
+            assert rep_section is None
+        else:
+            self.name = file_processor.container.name
+            assert self.name is not None
+            assert (file_processor.container.secttype,
+                    section, rep_section) in {
+                ('noheading', 'Decode', 'decode'),
+                ('Operation', 'Execute', 'execute'),
+                ('Library', 'Functions', 'functions')
+            }
+        assert mayhavelinks == '1'
+        self.section = section
 
         self.tokenizer = token.Tokenizer()
         self.buf = []
@@ -94,11 +106,16 @@ class Fragment:
 
 class Container:
     def __init__(self, name, mylink, enclabels, sections, secttype):
-        self.name = name            # 'aarch32/instrs/#/#.txt'
-        self.mylink = mylink        # 'aarch32.instrs.#.#.txt' / 'commonps'
-        self.enclabels = enclabels  # ''
-        self.sections = sections    # '1'
-        self.secttype = secttype    # 'noheading' / 'Operation'
+        self.name = name
+        if secttype == 'Operation':
+            assert mylink == 'commonps'
+        else:
+            assert mylink == name.replace('/', '.')
+        assert enclabels == ''
+        assert sections == '1'
+        assert secttype in {'noheading', 'Library', 'Operation'}
+        self.secttype = secttype
+
         self.fragment = None
 
 class FileProcessor:
@@ -180,33 +197,50 @@ class FileProcessor:
             lineno = self.p.CurrentLineNumber - 1
         sys.stderr.write('%s: error: %s\n' % (lineno + 1, msg))
 
+def escape_html(s):
+    return s.replace('&', '&amp;').replace('"', '&quot;') \
+            .replace('<', '&lt;').replace('>', '&gt;')
+
 def main(base_dir):
     file_processors = [FileProcessor(base_dir, fn)
                        for fn in sorted(os.listdir(base_dir))
                        if fn[0] != '.' and fn.endswith('.xml')
                                        and fn != 'onebigfile.xml']
-    for file_processor in file_processors:
-        if file_processor.fn == 'ldm_u.xml':
-            for fragment in file_processor.fragments:
-                if fragment.body is not None:
-                    print()
-                    for statement in fragment.body:
-                        for l in statement.dump():
-                            print(l)
-                    print()
-                elif fragment.expression is not None:
-                    print()
-                    print(str(fragment.expression))
-                    print()
-                else:
-                    print()
-                    print('// empty')
-                    print()
 
     #for l in ns.global_ns.dump():
     #    print('| ' + l)
 
     scope.process_namespace(ns.global_ns)
+
+    with open('output.html', 'w') as f:
+        f.write('''\
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>ASL snippets</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+''')
+        for file_processor in file_processors:
+            f.write('<h3>%s</h3>\n' % file_processor.fn)
+            for fragment in file_processor.fragments:
+                if fragment.name is not None:
+                    f.write('%s<br>\n' % escape_html(fragment.name))
+                f.write('<pre class="sect_%s">' % str(fragment.section).lower())
+                if fragment.body is not None:
+                    for statement in fragment.body:
+                        for l in statement.dump():
+                            f.write(escape_html(l) + '\n')
+                elif fragment.expression is not None:
+                    s = str(fragment.expression)
+                    f.write(escape_html(s) + '\n')
+                else:
+                    f.write('// empty\n')
+                f.write('</pre>\n')
+
+        f.write('</body></html>\n')
 
 if __name__ == '__main__':
     main(sys.argv[1])

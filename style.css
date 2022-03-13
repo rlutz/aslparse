@@ -1,0 +1,22 @@
+pre {
+	background-color: #f4f4f4;
+	border: 1px solid black;
+	border-radius: .75em;
+	padding: 1em;
+}
+
+.sect_decode {
+	background-color: #eeffee;
+}
+
+.sect_execute {
+	background-color: #eeeeff;
+}
+
+.sect_functions {
+	background-color: #ffeeee;
+}
+
+.sect_none {
+	background-color: #eeeeee;
+}
