@@ -151,7 +151,7 @@ class Primitive:
         self.token = token
 
     def __str__(self):
-        return str(token)
+        return str(self.token)
 
 
 def parse_identifier_chain(ts):
