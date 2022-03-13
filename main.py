@@ -21,7 +21,8 @@ class Fragment:
                     section, rep_section) in {
                 ('noheading', 'Decode', 'decode'),
                 ('Operation', 'Execute', 'execute'),
-                ('Library', 'Functions', 'functions')
+                ('Library', 'Functions', 'functions'),
+                ('Shared Decode', 'Postdecode', 'postdecode')
             }
         assert mayhavelinks == '1'
         self.section = section
@@ -107,13 +108,14 @@ class Fragment:
 class Container:
     def __init__(self, name, mylink, enclabels, sections, secttype):
         self.name = name
-        if secttype == 'Operation':
+        if secttype in {'Operation', 'Shared Decode'}:
             assert mylink == 'commonps'
         else:
             assert mylink == name.replace('/', '.')
         assert enclabels == ''
         assert sections == '1'
-        assert secttype in {'noheading', 'Library', 'Operation'}
+        assert secttype in {'noheading', 'Library',
+                            'Operation', 'Shared Decode'}
         self.secttype = secttype
 
         self.fragment = None
