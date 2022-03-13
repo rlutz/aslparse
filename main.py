@@ -200,36 +200,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-# Magic word: if then elsif else for to IN UNDEFINED UNPREDICTABLE
-#
-# Identifier, linked:
-#         ConditionPassed
-#         EL2
-#         M32_User
-#         M32_System
-#         BitCount
-#         R
-#         Rmode
-#         MemA
-#         UInt
-#         BitCount
-#
-# Identifier, not linked:
-#         EncodingSpecificOperations
-#         PSTATE.EL
-#         PSTATE.M
-#         registers<...>
-#         (... values from instruction ...)
-#         (... self-defined variables ...)
-#
-# Special characters: ( ) ; == . { , } = * [ ] - < > ||
-#
-# Numbers: [0-9]+
-#
-# ?: '1'
-#
-# Comments: //...
