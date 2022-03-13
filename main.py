@@ -5,22 +5,79 @@ import xml.parsers.expat
 
 from pseudocode import *
 
-class Log:
-    def __init__(self):
-        self.p = None
-        self.lineno = None
+class FileProcessor:
+    def __init__(self, path, is_shared_pseudocode, do_print):
+        self.path = path
+        self.is_shared_pseudocode = is_shared_pseudocode
+        self.do_print = do_print
 
-    def error(self, msg):
-        if self.lineno is not None:
-            lineno = self.lineno
-        else:
+        self.lineno = None
+        self.container = None
+        self.fragment = None
+
+        self.p = xml.parsers.expat.ParserCreate(namespace_separator = '!')
+        self.p.StartElementHandler = self.StartElementHandler
+        self.p.EndElementHandler = self.EndElementHandler
+        self.p.CharacterDataHandler = self.CharacterDataHandler
+
+        with open(self.path, 'rb') as f:
+            try:
+                self.p.ParseFile(f)
+            except xml.parsers.expat.ExpatError as e:
+                self.error(str(e), lineno = e.lineno - 1)
+
+    def StartElementHandler(self, name, attributes):
+        if name == 'ps':
+            if self.fragment is not None:
+                self.error('ps tag inside pstext tag')
+                return
+            if self.container is not None:
+                self.error('ps tag inside another ps tag')
+            self.container = Container(**attributes)
+        elif name == 'pstext':
+            if self.fragment is not None:
+                self.error('pstext tag inside another pstext tag')
+            self.fragment = Fragment(self, **attributes)
+            if self.container is not None:
+                if self.container.fragment is not None:
+                    self.error('multiple pstext tags inside ps tag')
+                self.container.fragment = self.fragment
+        elif self.fragment is not None:
+            if name != 'a' and name != 'anchor':
+                raise ParseError
+            self.fragment.start_element(name, **attributes)
+
+    def EndElementHandler(self, name):
+        if name == 'ps':
+            if self.container is None:
+                self.error('closing ps tag without opening tag')
+            self.container = None
+        elif name == 'pstext':
+            if self.fragment is None:
+                self.error('closing pstext tag without opening tag')
+            self.fragment.end(self.is_shared_pseudocode, self.do_print)
+            self.fragment = None
+        elif self.fragment is not None:
+            self.fragment.end_element(name)
+
+    def CharacterDataHandler(self, data):
+        # some files contain indentation errors
+        if self.path.endswith('/mrs_br.xml'):
+            data = data.replace('       UNPREDICTABLE;',
+                                '        UNPREDICTABLE;')
+        if self.path.endswith('/vcmla.xml'):
+            data = data.replace('               element',
+                                '                element')
+        if self.path.endswith('/vcvt_xs.xml'):
+            data = data.replace('     when ',
+                                '    when ')
+        if self.fragment is not None:
+            self.fragment.character_data(data)
+
+    def error(self, msg, lineno = None):
+        if lineno is None:
             lineno = self.p.CurrentLineNumber - 1
         sys.stderr.write('%s: error: %s\n' % (lineno + 1, msg))
-
-log = Log()
-
-
-
 
 class Container:
     def __init__(self, name, mylink, enclabels, sections, secttype):
@@ -31,9 +88,11 @@ class Container:
         self.secttype = secttype    # 'noheading' / 'Operation'
         self.fragment = None
 
-
 class Fragment:
-    def __init__(self, mayhavelinks, section = None, rep_section = None):
+    def __init__(self, file_processor,
+                 mayhavelinks, section = None, rep_section = None):
+        self.file_processor = file_processor
+
         self.mayhavelinks = mayhavelinks  # '1'
         self.section = section            # 'Decode' / 'Execute'
         self.rep_section = rep_section    # 'decode' / 'execute'
@@ -57,8 +116,8 @@ class Fragment:
         if name != 'a' and name != 'anchor':
             raise ParseError
         if self.inside_element is not None:
-            log.error('%s tag inside %s tag in pstext tag'
-                        % (name, self.inside_element))
+            self.file_processor.error('%s tag inside %s tag in pstext tag'
+                                        % (name, self.inside_element))
         self.inside_element = name
 
     def end_element(self, name):
@@ -125,77 +184,6 @@ class Fragment:
             e.report()
             sys.exit(1)
 
-
-container = None
-fragment = None
-
-def parse_file(path, is_shared_pseudocode, do_print):
-    def StartElementHandler(name, attributes):
-        global container, fragment
-        if name == 'ps':
-            if fragment is not None:
-                log.error('ps tag inside pstext tag')
-                return
-            if container is not None:
-                log.error('ps tag inside another ps tag')
-            container = Container(**attributes)
-        elif name == 'pstext':
-            if fragment is not None:
-                log.error('pstext tag inside another pstext tag')
-            fragment = Fragment(**attributes)
-            if container is not None:
-                if container.fragment is not None:
-                    log.error('multiple pstext tags inside ps tag')
-                container.fragment = fragment
-        elif fragment is not None:
-            if name != 'a' and name != 'anchor':
-                raise ParseError
-            fragment.start_element(name, **attributes)
-
-    def EndElementHandler(name):
-        global container, fragment
-        if name == 'ps':
-            if container is None:
-                log.error('closing ps tag without opening tag')
-            container = None
-        elif name == 'pstext':
-            if fragment is None:
-                log.error('closing pstext tag without opening tag')
-            fragment.end(is_shared_pseudocode, do_print)
-            fragment = None
-        elif fragment is not None:
-            fragment.end_element(name)
-
-    def CharacterDataHandler(data):
-        # some files contain indentation errors
-        if path.endswith('/mrs_br.xml'):
-            data = data.replace('       UNPREDICTABLE;',
-                                '        UNPREDICTABLE;')
-        if path.endswith('/vcmla.xml'):
-            data = data.replace('               element',
-                                '                element')
-        if path.endswith('/vcvt_xs.xml'):
-            data = data.replace('     when ',
-                                '    when ')
-        if fragment is not None:
-            fragment.character_data(data)
-
-    p = xml.parsers.expat.ParserCreate(namespace_separator = '!')
-    p.StartElementHandler = StartElementHandler
-    p.EndElementHandler = EndElementHandler
-    p.CharacterDataHandler = CharacterDataHandler
-
-    f = open(path, 'rb')
-
-    log.p = p
-    try:
-        p.ParseFile(f)
-    except xml.parsers.expat.ExpatError as e:
-        log.lineno = e.lineno - 1
-        log.error("%s" % e)
-
-    f.close()
-
 def main():
     base_dir = sys.argv[1]
     for fn in sorted(os.listdir(base_dir)):
@@ -204,7 +192,7 @@ def main():
         path = os.path.join(base_dir, fn)
         #print()
         #print('###', path)
-        parse_file(path, fn == 'shared_pseudocode.xml', fn == 'ldm_u.xml')
+        FileProcessor(path, fn == 'shared_pseudocode.xml', fn == 'ldm_u.xml')
 
     #ns.global_ns.__print__('| ')
 
