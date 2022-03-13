@@ -162,6 +162,8 @@ def process_statement(statement, scope):
             process_expression(arg, scope)
     elif isinstance(statement, stmt.See):
         pass
+    elif isinstance(statement, stmt.SeeIdentifier):
+        pass
     elif isinstance(statement, stmt.Undefined):
         pass
     elif isinstance(statement, stmt.Unpredictable):

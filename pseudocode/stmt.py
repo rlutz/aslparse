@@ -52,6 +52,13 @@ class See:
     def dump(self):
         return ['SEE "%s";' % self.target]
 
+class SeeIdentifier:
+    def __init__(self, target):
+        self.target = target
+
+    def dump(self):
+        return ['SEE(%s);' % self.target]
+
 class Undefined:
     def dump(self):
         return ['UNDEFINED;']
@@ -361,6 +368,13 @@ def parse_statement(ts):
 
     if ts.consume_if(token.ReservedWord('SEE')):
         s = ts.consume()
+        if s == token.Nonalpha('('):
+            s = ts.consume()
+            if not isinstance(s, token.LinkedIdentifier):
+                raise ParseError(ts)
+            ts.consume_assert(token.Nonalpha(')'))
+            ts.consume_assert(token.Nonalpha(';'))
+            return stmt.SeeIdentifier(s.data)
         if not isinstance(s, token.String):
             raise ParseError(ts)
         ts.consume_assert(token.Nonalpha(';'))

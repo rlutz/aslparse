@@ -421,6 +421,10 @@ class Tokenizer:
             self.inside_string += data
             return
 
+        is_see = data[:4] == 'SEE(' and data[-1:] == ')'
+        if is_see:
+            data = data[4:-1]
+
         parts = data.split('.')
         for part in parts:
             if not part:
@@ -430,10 +434,15 @@ class Tokenizer:
                           or ch == '_' or i > 0 and ch >= '0' and ch <= '9'):
                     raise LexError(part, i)
 
+        if is_see:
+            self.tokens.append(token.ReservedWord('SEE'))
+            self.tokens.append(token.Nonalpha('('))
         for part in parts[:-1]:
             self.tokens.append(token.Identifier(part))
             self.tokens.append(token.Nonalpha('.'))
         self.tokens.append(token.LinkedIdentifier(parts[-1]))
+        if is_see:
+            self.tokens.append(token.Nonalpha(')'))
 
     def process_anchor(self, data):
         if self.inside_string is not None:
