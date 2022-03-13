@@ -102,9 +102,11 @@ class Container:
         self.fragment = None
 
 class FileProcessor:
-    def __init__(self, path, is_shared_pseudocode):
-        self.path = path
-        self.is_shared_pseudocode = is_shared_pseudocode
+    def __init__(self, base_dir, fn):
+        self.base_dir = base_dir
+        self.fn = fn
+        self.path = os.path.join(base_dir, fn)
+        self.is_shared_pseudocode = fn == 'shared_pseudocode.xml'
 
         self.lineno = None
         self.container = None
@@ -179,15 +181,12 @@ class FileProcessor:
         sys.stderr.write('%s: error: %s\n' % (lineno + 1, msg))
 
 def main(base_dir):
-    for fn in sorted(os.listdir(base_dir)):
-        if not fn.endswith('.xml') or fn == 'onebigfile.xml':
-            continue
-        path = os.path.join(base_dir, fn)
-        #print()
-        #print('###', path)
-        file_processor = FileProcessor(path, fn == 'shared_pseudocode.xml')
-
-        if fn == 'ldm_u.xml':
+    file_processors = [FileProcessor(base_dir, fn)
+                       for fn in sorted(os.listdir(base_dir))
+                       if fn[0] != '.' and fn.endswith('.xml')
+                                       and fn != 'onebigfile.xml']
+    for file_processor in file_processors:
+        if file_processor.fn == 'ldm_u.xml':
             for fragment in file_processor.fragments:
                 if fragment.body is not None:
                     print()
