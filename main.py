@@ -84,7 +84,8 @@ class Fragment:
                 if do_print:
                     print()
                     for statement in body:
-                        statement.__print__('')
+                        for l in statement.dump():
+                            print(l)
                     print()
                 if is_shared_pseudocode:
                     for declaration in body:
@@ -195,7 +196,8 @@ def main(base_dir):
         #print('###', path)
         FileProcessor(path, fn == 'shared_pseudocode.xml', fn == 'ldm_u.xml')
 
-    #ns.global_ns.__print__('| ')
+    #for l in ns.global_ns.dump():
+    #    print('| ' + l)
 
     scope.process_namespace(ns.global_ns)
 

@@ -14,7 +14,7 @@ class Function:
         self.parameters = parameters
         self.body = body
 
-    def __print__(self, indent):
+    def dump(self):
         name = '.'.join(str(part) for part in self.name)
         if self.parameters is None:
             params = None
@@ -23,30 +23,34 @@ class Function:
                                  str(pt), '&' if by_reference else '', str(pi))
                                for pt, pi, by_reference in self.parameters)
 
+        lines = []
+
         if self.functype == SETTER:
-            if params is not None:
-                params = '[%s]' % params
-            else:
-                params = ''
-            print(indent + '%s%s = %s %s%s' % (
-                name, params, str(self.result_type), str(self.result_name),
+            lines.append('%s%s = %s %s%s' % (
+                name,
+                '[%s]' % params if params is not None else '',
+                str(self.result_type),
+                str(self.result_name),
                 ';' if self.body is None else ''))
         elif self.functype == GETTER:
-            if params is not None:
-                params = '[%s]' % params
-            else:
-                params = ''
-            print(indent + '%s %s%s%s' % (
-                str(self.result_type), name, params,
+            lines.append('%s %s%s%s' % (
+                str(self.result_type),
+                name,
+                '[%s]' % params if params is not None else '',
                 ';' if self.body is None else ''))
         else:
-            print(indent + '%s %s(%s)%s' % (
-                str(self.result_type), name, params,
+            lines.append('%s %s(%s)%s' % (
+                str(self.result_type),
+                name,
+                params,
                 ';' if self.body is None else ''))
 
         if self.body is not None:
             for statement in self.body:
-                statement.__print__(indent + '    ')
+                for l in statement.dump():
+                    lines.append('    ' + l)
+
+        return lines
 
 class Variable:
     def __init__(self, is_constant, datatype, variables):
@@ -54,63 +58,71 @@ class Variable:
         self.datatype = datatype
         self.variables = variables
 
-    def __print__(self, indent):
-        variables = ', '.join(
-            '.'.join(str(part) for part in name) +
-            (' = ' + str(expression) if expression is not None else '')
-            for name, expression in self.variables)
-        if self.is_constant:
-            print(indent + 'constant %s %s;' % (str(self.datatype), variables))
-        else:
-            print(indent + '%s %s;' % (str(self.datatype), variables))
+    def dump(self):
+        return ['%s%s %s;' % (
+            'constant ' if self.is_constant else '',
+            str(self.datatype),
+            ', '.join(
+                '%s%s' % (
+                    '.'.join(str(part) for part in name),
+                    ' = ' + str(expression) if expression is not None else '')
+                for name, expression in self.variables))]
 
 class Array:
     def __init__(self, datatype, name):
         self.datatype = datatype
         self.name = name
 
-    def __print__(self, indent):
-        print(indent + '%s %s;' % (
-            str(self.datatype), '.'.join(str(part) for part in self.name)))
+    def dump(self):
+        return ['%s %s;' % (
+            str(self.datatype),
+            '.'.join(str(part) for part in self.name))]
 
 class Enumeration:
     def __init__(self, name, values):
         self.name = name
         self.values = values
 
-    def __print__(self, indent):
-        print(indent + 'enumeration %s {%s\n};' % (
-            self.name, ','.join('\n' + indent + '    ' + str(value)
-                                for value in self.values)))
+    def dump(self):
+        lines = []
+        lines.append('enumeration %s {' % self.name)
+        for i, value in enumerate(self.values):
+            lines.append('    %s%s' % (
+                str(value),
+                ',' if i != len(self.values) - 1 else ''))
+        lines.append('};')
+        return lines
 
 class Type:
     def __init__(self, name, fields):
         self.name = name
         self.fields = fields
 
-    def __print__(self, indent):
+    def dump(self):
         if self.fields is None:
-            print(indent + 'type %s;' % '.'.join(str(part)
-                                                 for part in self.name))
-            return
-        print(indent + 'type ' + '.'.join(str(part) for part in self.name)
-            + ' is (')
+            return ['type %s;' % (
+                '.'.join(str(part) for part in self.name))]
+        lines = []
+        lines.append('type %s is (' % (
+            '.'.join(str(part) for part in self.name)))
         for i, field in enumerate(self.fields):
             field_type, field_identifier = field
-            print(indent + '    %s %s%s' % (
+            lines.append('    %s %s%s' % (
                 str(field_type),
                 str(field_identifier),
                 ',' if i != len(self.fields) - 1 else ''))
-        print(indent + ')')
+        lines.append(')')
+        return lines
 
 class TypeEquals:
     def __init__(self, name, datatype):
         self.name = name
         self.datatype = datatype
 
-    def __print__(self, indent):
-        print(indent + 'type %s = %s;' % (
-            '.'.join(str(part) for part in self.name), str(self.datatype)))
+    def dump(self):
+        return ['type %s = %s;' % (
+            '.'.join(str(part) for part in self.name),
+            str(self.datatype))]
 
 # parameter :== datatype identifier
 # parameter-list :== parameter | parameter-list ',' parameter

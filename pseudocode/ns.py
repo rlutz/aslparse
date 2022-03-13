@@ -4,48 +4,52 @@ class Namespace:
     def __init__(self):
         self.members = {}
 
-    def __print__(self, indent):
-        print('namespace')
+    def dump(self):
+        lines = []
+        lines.append('namespace')
         for name, value in sorted(self.members.items()):
-            print(indent + name + ':', end = ' ')
-            value.__print__(indent + '    ')
+            lines.append(name + ':')
+            for l in value.dump():
+                lines.append('    ' + l)
+        return lines
 
 class Function:
     def __init__(self):
         self.signatures = []
 
-    def __print__(self, indent):
-        print('function')
+    def dump(self):
+        lines = []
+        lines.append('function')
         for signature, decl in self.signatures:
-            print(indent + signature)
+            lines.append(signature)
 
 class Accessor:
     def __init__(self):
         self.setter = None
         self.getter = None
 
-    def __print__(self, indent):
-        print('accessor')
+    def dump(self):
+        return ['accessor']
 
 class Variable:
-    def __print__(self, indent):
-        print('variable')
+    def dump(self):
+        return ['variable']
 
 class Array:
-    def __print__(self, indent):
-        print('array')
+    def dump(self):
+        return ['array']
 
 class Enumeration:
-    def __print__(self, indent):
-        print('enumeration')
+    def dump(self):
+        return ['enumeration']
 
 class Struct:
-    def __print__(self, indent):
-        print('struct')
+    def dump(self):
+        return ['struct']
 
 class Type:
-    def __print__(self, indent):
-        print('type')
+    def dump(self):
+        return ['type']
 
 implicit = [
     'CONTEXTIDR_EL2',
