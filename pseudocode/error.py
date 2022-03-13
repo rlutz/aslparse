@@ -65,8 +65,8 @@ class ParseError(Exception):
             else:
                 print('   ', end = ' ')
             if isinstance(t, list):
-                print(' '.join('[...]' if isinstance(t1, list) else str(t1))
-                               for t1 in t[:10]) \
-                          + (' ...' if len(t) > 10 else '')
+                print(' '.join('[...]' if isinstance(t1, list) else str(t1)
+                               for t1 in t[:10])
+                          + (' ...' if len(t) > 10 else ''))
             else:
                 print(str(t))
