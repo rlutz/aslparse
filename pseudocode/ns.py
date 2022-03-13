@@ -81,12 +81,12 @@ class LookupError(Exception):
 
 def lookup(name):
     x = global_ns
-    if len(name) == 1 and name[0].name in implicit:
+    if len(name) == 1 and name[0].data in implicit:
         return None
     for part in name:
         assert isinstance(x, ns.Namespace)
         if not isinstance(part, str):
-            part = part.name
+            part = part.data
         try:
             x = x.members[part]
         except KeyError:
@@ -99,7 +99,7 @@ def define(name, value):
     for i, part in enumerate(name):
         assert isinstance(x, ns.Namespace)
         if not isinstance(part, str):
-            part = part.name
+            part = part.data
         if i == len(name) - 1:
             assert part not in x.members
             x.members[part] = value

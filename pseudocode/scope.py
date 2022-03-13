@@ -45,7 +45,7 @@ class Scope:
     # expression is mentioned in function signature -> templating parameter
     def process_signature_expr(self, expression):
         if isinstance(expression, expr.Identifier):
-            self.local_dict[expression.name.name] = None
+            self.local_dict[expression.name.data] = None
         elif isinstance(expression, expr.Operator):
             self.process_signature_expr(expression.arg0)
             self.process_signature_expr(expression.arg1)
@@ -53,11 +53,11 @@ class Scope:
             assert isinstance(expression, expr.Numeric)
 
     def add_local_variable(self, datatype, name):
-        self.local_dict[name.name] = None
+        self.local_dict[name.data] = None
 
     def resolve(self, single_name):
         try:
-            return self.local_dict[single_name.name]
+            return self.local_dict[single_name.data]
         except KeyError:
             pass
         return ns.lookup([single_name])
@@ -93,16 +93,16 @@ class Scope:
         elif isinstance(statement, stmt.LocalDeclaration):
             assert isinstance(statement.declaration, decl.Enumeration)
             for value in statement.declaration.values:
-                assert value.name not in self.local_dict
-                self.local_dict[value.name] = None
+                assert value.data not in self.local_dict
+                self.local_dict[value.data] = None
 
     def crawl_lhs(self, lhs):
         if isinstance(lhs, expr.Identifier):
-            if lhs.name.name not in self.local_dict:
+            if lhs.name.data not in self.local_dict:
                 try:
                     ns.lookup([lhs.name])
                 except ns.LookupError:
-                    self.local_dict[lhs.name.name] = None
+                    self.local_dict[lhs.name.data] = None
         elif isinstance(lhs, expr.Values):
             for member in lhs.members:
                 self.crawl_lhs(member)
@@ -112,14 +112,14 @@ class Scope:
     def plain_lhs(self, lhs):
         assert isinstance(lhs, expr.Identifier)
         #TODO: handle nested scopes
-        #assert lhs.name.name not in self.local_dict
+        #assert lhs.name.data not in self.local_dict
         try:
             ns.lookup([lhs.name])
         except ns.LookupError:
             pass
         else:
             pass # print 'OVERRIDING "%s"' % str(lhs.name)
-        self.local_dict[lhs.name.name] = None
+        self.local_dict[lhs.name.data] = None
 
 
 def process_namespace(namespace):

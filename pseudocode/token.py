@@ -1,172 +1,189 @@
+import functools
 import sys
+import weakref
+
 from . import token
 from . import LexError
 
-NEWLINE = sys.intern('\\n')
-# '\t', '\r', ' ': whitespace
-EXCLAMATION_MARK = sys.intern('!')
-#QUOTATION_MARK = sys.intern('"')
-#HASH = sys.intern('#')
-#DOLLAR = sys.intern('$')
-#PERCENT = sys.intern('%')
-AMPERSAND = sys.intern('&')
-DOUBLE_AMPERSAND = sys.intern('&&')
-# '\'': bit vector # APOSTROPHE
-OPAREN = sys.intern('(')
-CPAREN = sys.intern(')')
-ASTERISK = sys.intern('*')
-PLUS = sys.intern('+')
-PLUS_COLON = sys.intern('+:')
-COMMA = sys.intern(',')
-HYPHEN = sys.intern('-')
-PERIOD = sys.intern('.')
-DOUBLE_PERIOD = sys.intern('..')
-SLASH = sys.intern('/')
-COLON = sys.intern(':')
-SEMICOLON = sys.intern(';')
-LESS = sys.intern('<')
-DOUBLE_LESS = sys.intern('<<')
-LESS_EQUALS = sys.intern('<=')
-EQUALS = sys.intern('=')
-DOUBLE_EQUALS = sys.intern('==')
-EXCLAMATION_EQUALS = sys.intern('!=')
-GREATER = sys.intern('>')
-DOUBLE_GREATER = sys.intern('>>')
-GREATER_EQUALS = sys.intern('>=')
-#QUESTION_MARK = sys.intern('?')
-#AT = sys.intern('@')
-OBRACKET = sys.intern('[')
-#DOUBLE_BACKSLASH = sys.intern('\\')
-CBRACKET = sys.intern(']')
-CARET = sys.intern('^')
-#UNDERSCORE = sys.intern('_')
-#BACKTICK = sys.intern('`')
-OBRACE = sys.intern('{')
-VBAR = sys.intern('|')
-DOUBLE_VBAR = sys.intern('||')
-CBRACE = sys.intern('}')
-#TILDE = sys.intern('~')
+RESERVED_WORDS = {
+    'AND', 'DIV', 'EOR', 'FALSE', 'HIGH', 'IMPLEMENTATION_DEFINED', 'IN',
+    'LOW', 'MOD', 'NOT', 'OR', 'REM', 'SEE', 'TRUE', 'UNDEFINED', 'UNKNOWN',
+    'UNPREDICTABLE',
+    'array', 'assert', 'bit', 'bits', 'boolean', 'case', 'constant', 'do',
+    'downto', 'else', 'elsif', 'enumeration', 'for', 'if', 'integer', 'is',
+    'of', 'otherwise', 'repeat', 'return', 'then', 'to', 'until', 'when',
+    'while'
+}
 
+# 'type' is a reserved word but can also be used as an identifier
+MAYBE_RESERVED_WORDS = {
+    'type'
+}
 
-class ReservedWord:
-    def __init__(self, name):
-        self.name = name
+NONALPHA = {
+    '\\n', '!', '&', '&&', '(', ')', '*', '+', '+:', ',', '-', '.', '..', '/',
+    ':', ';', '<', '<<', '<=', '=', '==', '!=', '>', '>>', '>=', '[', ']', '^',
+    '{', '|', '||', '}'
+}
 
-    def __str__(self):
-        return self.name # 'rw:' + self.name
+def singleton(x):
+    actual_new = x.__new__
 
-class Identifier:
-    def __init__(self, name):
-        self.name = name
+    @functools.wraps(actual_new)
+    def new(cls, *args):
+        try:
+            d = cls._instances
+        except AttributeError:
+            d = cls._instances = weakref.WeakValueDictionary()
+        try:
+            inst = d[args]
+        except KeyError:
+            inst = d[args] = actual_new(cls)
+            inst.args = args
+            try:
+                inst.__init_singleton__(*args)
+            except:
+                del d[args]
+                raise
+        return inst
 
-    def __str__(self):
-        return self.name # 'id:' + self.name
+    x.__new__ = new
+    return x
 
-class LinkedIdentifier:
-    def __init__(self, name):
-        self.name = name
+@singleton
+class Token:
+    def __repr__(self):
+        try:
+            data = repr(self.data)
+        except AttributeError:
+            data = ''
+        return '%s.%s(%s)' % (self.__class__.__module__,
+                              self.__class__.__qualname__, data)
+
+class ReservedWord(Token):
+    def __init_singleton__(self, data):
+        if data not in RESERVED_WORDS and \
+           data not in MAYBE_RESERVED_WORDS:
+            raise ValueError
+        self.data = data
 
     def __str__(self):
-        return self.name # 'a:' + self.name
+        return self.data # 'rw:' + self.data
 
-class DeclarationIdentifier:
-    def __init__(self, name):
-        self.name = name
-
-    def __str__(self):
-        return self.name # 'decl:' + self.name
-
-class Number:
-    def __init__(self, name):
-        self.name = name
+class Identifier(Token):
+    def __init_singleton__(self, data):
+        if data in RESERVED_WORDS:
+            raise ValueError
+        self.data = data
 
     def __str__(self):
-        return self.name # 'num:' + self.name
+        return self.data # 'id:' + self.data
 
-class HexadecimalNumber:
-    def __init__(self, name):
-        self.name = name
-
-    def __str__(self):
-        return '0x' + self.name # 'num:' + self.name
-
-class Bitvector:
-    def __init__(self, name):
-        self.name = name
+class LinkedIdentifier(Token):
+    def __init_singleton__(self, data):
+        if data in RESERVED_WORDS:
+            raise ValueError
+        self.data = data
 
     def __str__(self):
-        return "'%s'" % self.name # 'bv:' + self.name
+        return self.data # 'a:' + self.data
 
-class String:
-    def __init__(self, data):
+class DeclarationIdentifier(Token):
+    def __init_singleton__(self, data):
+        if data in RESERVED_WORDS:
+            raise ValueError
+        self.data = data
+
+    def __str__(self):
+        return self.data # 'decl:' + self.data
+
+class Number(Token):
+    def __init_singleton__(self, data):
+        self.data = data
+
+    def __str__(self):
+        return self.data # 'num:' + self.data
+
+class HexadecimalNumber(Token):
+    def __init_singleton__(self, data):
+        self.data = data
+
+    def __str__(self):
+        return '0x' + self.data # 'num:' + self.data
+
+class Bitvector(Token):
+    def __init_singleton__(self, data):
+        self.data = data
+
+    def __str__(self):
+        return "'%s'" % self.data # 'bv:' + self.data
+
+class String(Token):
+    def __init_singleton__(self, data):
         self.data = data
 
     def __str__(self):
         return '"' + self.data + '"' # 'str:"' + self.data + '"'
 
+class Nonalpha(Token):
+    def __init_singleton__(self, data):
+        if data not in NONALPHA:
+            raise ValueError
+        self.data = data
 
-def intern_token(name, t):
-    try:
-        tokens = t.tokens
-    except AttributeError:
-        tokens = t.tokens = {}
-    try:
-        t_ = t.tokens[name]
-    except KeyError:
-        t_ = t.tokens[name] = t(name)
-    return t_
-
+    def __str__(self):
+        return self.data
 
 rw = {}
+for s in RESERVED_WORDS:
+    rw[s] = token.ReservedWord(s)
+for s in MAYBE_RESERVED_WORDS:
+    rw[s] = token.Identifier(s)
 
-for s in ['AND',
-          'DIV',
-          'EOR',
-          'FALSE',
-          'HIGH',
-          'IMPLEMENTATION_DEFINED',
-          'IN',
-          'LOW',
-          'MOD',
-          'NOT',
-          'OR',
-          'REM',
-          'SEE',
-          'TRUE',
-          'UNDEFINED',
-          'UNKNOWN',
-          'UNPREDICTABLE',
-          'array',
-          'assert',
-          'bit',
-          'bits',
-          'boolean',
-          'case',
-          'constant',
-          'do',
-          'downto',
-          'else',
-          'elsif',
-          'enumeration',
-          'for',
-          'if',
-          'integer',
-          'is',
-          'of',
-          'otherwise',
-          'repeat',
-          'return',
-          'then',
-          'to',
-          'until',
-          'when',
-          'while']:
-    s = sys.intern(s)
-    rw[s] = token.intern_token(s, token.ReservedWord)
-
-# 'type' is a reserved word but can also be used as an identifier
-s = sys.intern('type')
-rw[s] = token.intern_token(s, token.Identifier)
+NEWLINE = token.Nonalpha('\\n')
+# '\t', '\r', ' ': whitespace
+EXCLAMATION_MARK = token.Nonalpha('!')
+#QUOTATION_MARK = token.Nonalpha('"')
+#HASH = token.Nonalpha('#')
+#DOLLAR = token.Nonalpha('$')
+#PERCENT = token.Nonalpha('%')
+AMPERSAND = token.Nonalpha('&')
+DOUBLE_AMPERSAND = token.Nonalpha('&&')
+# '\'': bit vector # APOSTROPHE
+OPAREN = token.Nonalpha('(')
+CPAREN = token.Nonalpha(')')
+ASTERISK = token.Nonalpha('*')
+PLUS = token.Nonalpha('+')
+PLUS_COLON = token.Nonalpha('+:')
+COMMA = token.Nonalpha(',')
+HYPHEN = token.Nonalpha('-')
+PERIOD = token.Nonalpha('.')
+DOUBLE_PERIOD = token.Nonalpha('..')
+SLASH = token.Nonalpha('/')
+COLON = token.Nonalpha(':')
+SEMICOLON = token.Nonalpha(';')
+LESS = token.Nonalpha('<')
+DOUBLE_LESS = token.Nonalpha('<<')
+LESS_EQUALS = token.Nonalpha('<=')
+EQUALS = token.Nonalpha('=')
+DOUBLE_EQUALS = token.Nonalpha('==')
+EXCLAMATION_EQUALS = token.Nonalpha('!=')
+GREATER = token.Nonalpha('>')
+DOUBLE_GREATER = token.Nonalpha('>>')
+GREATER_EQUALS = token.Nonalpha('>=')
+#QUESTION_MARK = token.Nonalpha('?')
+#AT = token.Nonalpha('@')
+OBRACKET = token.Nonalpha('[')
+#DOUBLE_BACKSLASH = token.Nonalpha('\\')
+CBRACKET = token.Nonalpha(']')
+CARET = token.Nonalpha('^')
+#UNDERSCORE = token.Nonalpha('_')
+#BACKTICK = token.Nonalpha('`')
+OBRACE = token.Nonalpha('{')
+VBAR = token.Nonalpha('|')
+DOUBLE_VBAR = token.Nonalpha('||')
+CBRACE = token.Nonalpha('}')
+#TILDE = token.Nonalpha('~')
 
 
 class Tokenizer:
@@ -197,7 +214,7 @@ class Tokenizer:
                 try:
                     t = token.rw[name]
                 except KeyError:
-                    t = token.intern_token(name, token.Identifier)
+                    t = token.Identifier(name)
                 self.tokens.append(t)
                 pos += n
             elif ch == '\n':
@@ -268,8 +285,7 @@ class Tokenizer:
                     raise LexError(data, pos)
                 if data.find('\\', pos + 1, pos + 1 + n) != -1:
                     raise LexError(data, pos)
-                self.tokens.append(token.intern_token(
-                    data[pos + 1:pos + 1 + n], token.String))
+                self.tokens.append(token.String(data[pos + 1:pos + 1 + n]))
                 pos += n + 2
             elif ch == '#':
                 raise LexError(data, pos)
@@ -290,7 +306,7 @@ class Tokenizer:
                 except ValueError:
                     raise LexError(data, pos)
                 name = data[pos + 1:pos + 1 + n]
-                self.tokens.append(token.intern_token(name, token.Bitvector))
+                self.tokens.append(token.Bitvector(name))
                 pos += n + 2
             elif ch == '(':
                 self.tokens.append(token.OPAREN)
@@ -352,8 +368,8 @@ class Tokenizer:
                         n += 1
                     if n == 0:
                         raise LexError(data, pos)
-                    self.tokens.append(token.intern_token(
-                        data[pos:pos + n], token.HexadecimalNumber))
+                    self.tokens.append(
+                        token.HexadecimalNumber(data[pos:pos + n]))
                 else:
                     n = 1
                     while pos + n < len(data):
@@ -364,8 +380,7 @@ class Tokenizer:
                                      and data[pos + n + 1] == '.':
                             break
                         n += 1
-                    self.tokens.append(token.intern_token(
-                        data[pos:pos + n], token.Number))
+                    self.tokens.append(token.Number(data[pos:pos + n]))
                 pos += n
                 if pos < len(data) and (ch >= '0' and ch <= '9' or
                                         ch >= 'A' and ch <= 'Z' or
@@ -463,10 +478,9 @@ class Tokenizer:
                     raise LexError(part, i)
 
         for part in parts[:-1]:
-            self.tokens.append(token.intern_token(part, token.Identifier))
+            self.tokens.append(token.Identifier(part))
             self.tokens.append(token.PERIOD)
-        self.tokens.append(token.intern_token(parts[-1],
-                                              token.LinkedIdentifier))
+        self.tokens.append(token.LinkedIdentifier(parts[-1]))
 
     def process_anchor(self, data):
         if self.inside_string is not None:
@@ -482,10 +496,9 @@ class Tokenizer:
                     raise LexError(part, i)
 
         for part in parts[:-1]:
-            self.tokens.append(token.intern_token(part, token.Identifier))
+            self.tokens.append(token.Identifier(part))
             self.tokens.append(token.PERIOD)
-        self.tokens.append(token.intern_token(parts[-1],
-                                              token.DeclarationIdentifier))
+        self.tokens.append(token.DeclarationIdentifier(parts[-1]))
 
     def process_end(self):
         if self.inside_string is not None:
