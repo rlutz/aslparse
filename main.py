@@ -136,8 +136,10 @@ def parse_file(path, is_shared_pseudocode, do_print):
         #print('XmlDecl', repr(version), repr(encoding), repr(standalone))
         pass
 
-    def StartDoctypeDeclHandler(doctypeName, systemId, publicId, has_internal_subset):
-        #print('StartDoctypeDecl', repr(doctypeName), repr(systemId), repr(publicId), repr(has_internal_subset))
+    def StartDoctypeDeclHandler(doctypeName,
+                                systemId, publicId, has_internal_subset):
+        #print('StartDoctypeDecl', repr(doctypeName),
+        #      repr(systemId), repr(publicId), repr(has_internal_subset))
         pass
 
     def EndDoctypeDeclHandler():
@@ -148,7 +150,8 @@ def parse_file(path, is_shared_pseudocode, do_print):
         print('ElementDecl', repr(name), repr(model))
 
     def AttlistDeclHandler(elname, attname, type, default, required):
-        print('AttlistDecl', repr(elname), repr(attname), repr(type), repr(default), repr(required))
+        print('AttlistDecl', repr(elname), repr(attname), repr(type),
+                             repr(default), repr(required))
 
     def StartElementHandler(name, attributes):
         global container, fragment
@@ -207,14 +210,20 @@ def parse_file(path, is_shared_pseudocode, do_print):
             fragment.character_data(data)
         #print('CharacterData', repr(data))
 
-    def UnparsedEntityDeclHandler(entityName, base, systemId, publicId, notationName):
-        print('UnparsedEntityDecl', repr(entityName), repr(base), repr(systemId), repr(publicId), repr(notationName))
+    def UnparsedEntityDeclHandler(entityName,
+                                  base, systemId, publicId, notationName):
+        print('UnparsedEntityDecl', repr(entityName),
+              repr(base), repr(systemId), repr(publicId), repr(notationName))
 
-    def EntityDeclHandler(entityName, is_parameter_entity, value, base, systemId, publicId, notationName):
-        print('EntityDecl', repr(entityName), repr(is_parameter_entity), repr(value), repr(base), repr(systemId), repr(publicId), repr(notationName))
+    def EntityDeclHandler(entityName, is_parameter_entity, value,
+                          base, systemId, publicId, notationName):
+        print('EntityDecl',
+              repr(entityName), repr(is_parameter_entity), repr(value),
+              repr(base), repr(systemId), repr(publicId), repr(notationName))
 
     def NotationDeclHandler(notationName, base, systemId, publicId):
-        print('NotationDecl', repr(notationName), repr(base), repr(systemId), repr(publicId))
+        print('NotationDecl', repr(notationName),
+              repr(base), repr(systemId), repr(publicId))
 
     def StartNamespaceDeclHandler(prefix, uri):
         print('StartNamespaceDecl', repr(prefix), repr(uri))
@@ -241,7 +250,8 @@ def parse_file(path, is_shared_pseudocode, do_print):
         return 1
 
     def ExternalEntityRefHandler(context, base, systemId, publicId):
-        print('ExternalEntityRef', repr(context), repr(base), repr(systemId), repr(publicId))
+        print('ExternalEntityRef', repr(context),
+              repr(base), repr(systemId), repr(publicId))
         return 0
 
     p.XmlDeclHandler = XmlDeclHandler
