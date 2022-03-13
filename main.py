@@ -184,8 +184,7 @@ class Fragment:
             e.report()
             sys.exit(1)
 
-def main():
-    base_dir = sys.argv[1]
+def main(base_dir):
     for fn in sorted(os.listdir(base_dir)):
         if not fn.endswith('.xml') or fn == 'onebigfile.xml':
             continue
@@ -199,4 +198,4 @@ def main():
     scope.process_namespace(ns.global_ns)
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1])
