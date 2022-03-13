@@ -98,7 +98,7 @@ class Fragment:
                 #print('// empty')
                 #print()
             elif (tokens[-1] == token.NEWLINE and
-                  tokens[-2] == token.SEMICOLON) \
+                  tokens[-2] == token.Nonalpha(';')) \
                     or isinstance(tokens[-1], list) \
                     or tokens[0] == token.Identifier('type'):
                 if is_shared_pseudocode:

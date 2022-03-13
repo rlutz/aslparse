@@ -239,7 +239,7 @@ def parse_case_clause(ts):
                not isinstance(pattern, token.Bitvector):
                 raise ParseError(ts)
             patterns.append(pattern)
-            if not ts.consume_if(token.COMMA):
+            if not ts.consume_if(token.Nonalpha(',')):
                 break
     elif ts.consume_if(token.ReservedWord('otherwise')):
         patterns = None
@@ -295,7 +295,7 @@ def parse_statement(ts):
         if not isinstance(var, token.Identifier) and \
            not isinstance(var, token.LinkedIdentifier):
             raise ParseError(ts)
-        ts.consume_assert(token.EQUALS)
+        ts.consume_assert(token.Nonalpha('='))
         start = expr.parse_binary(ts)
         if ts.consume_if(token.ReservedWord('to')):
             down = False
@@ -319,7 +319,7 @@ def parse_statement(ts):
         body = stmt.parse_block(ts.consume(), stmt.parse_statement)
         ts.consume_assert(token.ReservedWord('until'))
         condition = expr.parse_binary(ts)
-        ts.consume_assert(token.SEMICOLON)
+        ts.consume_assert(token.Nonalpha(';'))
         return stmt.Repeat(body, condition)
 
     if ts.consume_if(token.ReservedWord('case')):
@@ -334,43 +334,43 @@ def parse_statement(ts):
         s = ts.consume()
         if not isinstance(s, token.String):
             raise ParseError(ts)
-        ts.consume_assert(token.SEMICOLON)
+        ts.consume_assert(token.Nonalpha(';'))
         return stmt.See(s.data)
 
     if ts.consume_if(token.ReservedWord('UNDEFINED')):
-        ts.consume_assert(token.SEMICOLON)
+        ts.consume_assert(token.Nonalpha(';'))
         return stmt.Undefined()
 
     if ts.consume_if(token.ReservedWord('UNPREDICTABLE')):
-        ts.consume_assert(token.SEMICOLON)
+        ts.consume_assert(token.Nonalpha(';'))
         return stmt.Unpredictable()
 
     if ts.consume_if(token.ReservedWord('IMPLEMENTATION_DEFINED')):
         if not isinstance(ts.peek(), token.String):
             raise ParseError(ts)
         aspect = ts.consume().data
-        ts.consume_assert(token.SEMICOLON)
+        ts.consume_assert(token.Nonalpha(';'))
         return stmt.ImplementationDefined(aspect)
 
     if ts.consume_if(token.ReservedWord('assert')):
         expression = expr.parse_ternary(ts)
-        ts.consume_assert(token.SEMICOLON)
+        ts.consume_assert(token.Nonalpha(';'))
         return stmt.Assert(expression)
 
     if ts.consume_if(token.ReservedWord('return')):
-        if ts.peek() == token.SEMICOLON:
+        if ts.peek() == token.Nonalpha(';'):
             value = None
         else:
             value = expr.parse_ternary(ts)
-        ts.consume_assert(token.SEMICOLON)
+        ts.consume_assert(token.Nonalpha(';'))
         return stmt.Return(value)
 
     if ts.consume_if(token.ReservedWord('constant')):
         datatype = dtype.parse(ts)
         lhs = expr.parse_identifier_chain(ts)
-        ts.consume_assert(token.EQUALS)
+        ts.consume_assert(token.Nonalpha('='))
         expression = expr.parse_ternary(ts)
-        ts.consume_assert(token.SEMICOLON)
+        ts.consume_assert(token.Nonalpha(';'))
         return stmt.ConstantAssignment(datatype, lhs, expression)
 
     if ts.peek() == token.ReservedWord('enumeration'):
@@ -382,13 +382,13 @@ def parse_statement(ts):
         variables = []
         while True:
             lhs = expr.parse_identifier_chain(sub_ts)
-            if sub_ts.consume_if(token.EQUALS):
+            if sub_ts.consume_if(token.Nonalpha('=')):
                 variables.append((lhs, expr.parse_ternary(sub_ts)))
             else:
                 variables.append((lhs, None))
-            if not sub_ts.consume_if(token.COMMA):
+            if not sub_ts.consume_if(token.Nonalpha(',')):
                 break
-        sub_ts.consume_assert(token.SEMICOLON)
+        sub_ts.consume_assert(token.Nonalpha(';'))
     except ParseError:
         ts.abandon(sub_ts)
     else:
@@ -398,18 +398,18 @@ def parse_statement(ts):
 
     lhs = expr.parse_assignable(ts)
 
-    if ts.consume_if(token.OPAREN):
-        if ts.peek() != token.CPAREN:
+    if ts.consume_if(token.Nonalpha('(')):
+        if ts.peek() != token.Nonalpha(')'):
             args = expr.parse_list(ts)
         else:
             args = []
-        ts.consume_assert(token.CPAREN)
-        ts.consume_assert(token.SEMICOLON)
+        ts.consume_assert(token.Nonalpha(')'))
+        ts.consume_assert(token.Nonalpha(';'))
         return stmt.FunctionCall(lhs, args)
 
-    ts.consume_assert(token.EQUALS)
+    ts.consume_assert(token.Nonalpha('='))
     expression = expr.parse_ternary(ts)
-    ts.consume_assert(token.SEMICOLON)
+    ts.consume_assert(token.Nonalpha(';'))
     return stmt.Assignment(lhs, expression)
 
 
@@ -443,7 +443,7 @@ def parse_block(tokens, parse_func):
                     break
                 raise ParseError(tstream.TokenStream(tokens, pos, pos))
 
-            if t == token.SEMICOLON:
+            if t == token.Nonalpha(';'):
                 if tokens[start] == token.ReservedWord('when') or \
                    tokens[start] == token.ReservedWord('otherwise'):
                     if pos < len(tokens) and tokens[pos] == token.NEWLINE:

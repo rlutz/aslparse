@@ -165,7 +165,7 @@ def parse_identifier_chain(ts):
             expression = expr.Identifier(t)
         else:
             expression = expr.QualifiedIdentifier(expression, t)
-        if not ts.consume_if(token.PERIOD):
+        if not ts.consume_if(token.Nonalpha('.')):
             break
     return expression
 
@@ -180,20 +180,20 @@ def parse_bitspec_clause(ts):
     sub_ts = ts.fork()
     args = []
     try:
-        sub_ts.consume_assert(token.LESS)
+        sub_ts.consume_assert(token.Nonalpha('<'))
         while True:
             arg = expr.parse_binary(sub_ts, len(operators) - 3)
-            if sub_ts.consume_if(token.COLON):
+            if sub_ts.consume_if(token.Nonalpha(':')):
                 arg1 = expr.parse_binary(sub_ts, len(operators) - 3)
-                args.append((arg, token.COLON, arg1))
-            elif sub_ts.consume_if(token.PLUS_COLON):
+                args.append((arg, token.Nonalpha(':'), arg1))
+            elif sub_ts.consume_if(token.Nonalpha('+:')):
                 arg1 = expr.parse_binary(sub_ts, len(operators) - 3)
-                args.append((arg, token.PLUS_COLON, arg1))
+                args.append((arg, token.Nonalpha('+:'), arg1))
             else:
                 args.append(arg)
-            if not sub_ts.consume_if(token.COMMA):
+            if not sub_ts.consume_if(token.Nonalpha(',')):
                 break
-        sub_ts.consume_assert(token.GREATER)
+        sub_ts.consume_assert(token.Nonalpha('>'))
     except ParseError as e:
         ts.abandon(sub_ts)
         return None
@@ -228,17 +228,17 @@ def parse_assignable(ts):
        isinstance(t, token.LinkedIdentifier):
         expression = expr.Identifier(ts.consume())
         while True:
-            if ts.consume_if(token.OBRACKET):
-                if ts.peek() != token.CBRACKET:
+            if ts.consume_if(token.Nonalpha('[')):
+                if ts.peek() != token.Nonalpha(']'):
                     args = expr.parse_list(ts)
                 else:
                     args = []
-                ts.consume_assert(token.CBRACKET)
+                ts.consume_assert(token.Nonalpha(']'))
                 expression = expr.Arguments(expression, '[]', args)
-            if not ts.consume_if(token.PERIOD):
+            if not ts.consume_if(token.Nonalpha('.')):
                 break
             t = ts.consume()
-            if t == token.LESS:
+            if t == token.Nonalpha('<'):
                 elements = []
                 while True:
                     t = ts.consume()
@@ -246,21 +246,21 @@ def parse_assignable(ts):
                        not isinstance(t, token.LinkedIdentifier):
                         raise ParseError(ts)
                     elements.append(expr.QualifiedIdentifier(expression, t))
-                    if not ts.consume_if(token.COMMA):
+                    if not ts.consume_if(token.Nonalpha(',')):
                         break
-                ts.consume_assert(token.GREATER)
+                ts.consume_assert(token.Nonalpha('>'))
                 return Bits(elements)
             if not isinstance(t, token.Identifier) and \
                not isinstance(t, token.LinkedIdentifier):
                 raise ParseError(ts)
             expression = expr.QualifiedIdentifier(expression, t)
-        if ts.maybe_peek() == token.LESS:
+        if ts.maybe_peek() == token.Nonalpha('<'):
             args = expr.parse_bitspec_clause(ts)
             if args is not None:
                 expression = expr.Arguments(expression, '<>', args)
         return expression
 
-    if ts.consume_if(token.LESS):
+    if ts.consume_if(token.Nonalpha('<')):
         elements = []
         while True:
             t = ts.consume()
@@ -268,21 +268,21 @@ def parse_assignable(ts):
                not isinstance(t, token.LinkedIdentifier):
                 raise ParseError(ts)
             elements.append(expr.Identifier(t))
-            if not ts.consume_if(token.COMMA):
+            if not ts.consume_if(token.Nonalpha(',')):
                 break
-        ts.consume_assert(token.GREATER)
+        ts.consume_assert(token.Nonalpha('>'))
         return Bits(elements)
 
-    if ts.consume_if(token.OPAREN):
+    if ts.consume_if(token.Nonalpha('(')):
         members = []
         while True:
             members.append(expr.parse_assignable(ts))
-            if not ts.consume_if(token.COMMA):
+            if not ts.consume_if(token.Nonalpha(',')):
                 break
-        ts.consume_assert(token.CPAREN)
+        ts.consume_assert(token.Nonalpha(')'))
         return Values(members)
 
-    if ts.consume_if(token.HYPHEN):
+    if ts.consume_if(token.Nonalpha('-')):
         return Omitted()
 
     raise ParseError(ts)
@@ -309,30 +309,30 @@ def parse_operand(ts):
        isinstance(t, token.HexadecimalNumber):
         ts.consume()
         expression = expr.Numeric(t)
-        if ts.maybe_peek() == token.LESS:
+        if ts.maybe_peek() == token.Nonalpha('<'):
             args = expr.parse_bitspec_clause(ts)
             expression = expr.Arguments(expression, '<>', args)
         return expression
     elif isinstance(t, token.Bitvector):
         ts.consume()
         return expr.Numeric(t)
-    elif ts.consume_if(token.OPAREN):
+    elif ts.consume_if(token.Nonalpha('(')):
         expressions = expr.parse_list(ts)
-        ts.consume_assert(token.CPAREN)
+        ts.consume_assert(token.Nonalpha(')'))
         if len(expressions) > 1:
             return Values(expressions)
         expression = expressions[0]
-        if ts.maybe_peek() == token.LESS:
+        if ts.maybe_peek() == token.Nonalpha('<'):
             args = expr.parse_bitspec_clause(ts)
             if args is not None:
                 expression = expr.Arguments(expression, '<>', args)
         return expression
-    elif ts.consume_if(token.OBRACE):
-        if ts.peek() != token.CBRACE:
+    elif ts.consume_if(token.Nonalpha('{')):
+        if ts.peek() != token.Nonalpha('}'):
             members = expr.parse_list(ts)
         else:
             members = []
-        ts.consume_assert(token.CBRACE)
+        ts.consume_assert(token.Nonalpha('}'))
         return expr.Set(members)
     elif t in [token.ReservedWord('FALSE'), token.ReservedWord('TRUE'),
                token.ReservedWord('LOW'), token.ReservedWord('HIGH')]:
@@ -359,14 +359,14 @@ def parse_operand(ts):
         return expression
 
     expression = parse_assignable(ts)
-    if ts.consume_if(token.OPAREN):
-        if ts.peek() != token.CPAREN:
+    if ts.consume_if(token.Nonalpha('(')):
+        if ts.peek() != token.Nonalpha(')'):
             args = expr.parse_list(ts)
         else:
             args = []
-        ts.consume_assert(token.CPAREN)
+        ts.consume_assert(token.Nonalpha(')'))
         expression = expr.Arguments(expression, '()', args)
-    if ts.maybe_peek() == token.LESS:
+    if ts.maybe_peek() == token.Nonalpha('<'):
         args = expr.parse_bitspec_clause(ts)
         if args is not None:
             expression = expr.Arguments(expression, '<>', args)
@@ -378,7 +378,7 @@ def parse_operand(ts):
 
 # Potentially: '~', '-', type casts
 
-unary_operators = [token.EXCLAMATION_MARK, token.HYPHEN,
+unary_operators = [token.Nonalpha('!'), token.Nonalpha('-'),
                    token.ReservedWord('NOT')]
 
 def parse_unary(ts):
@@ -407,21 +407,22 @@ def parse_unary(ts):
 #               | expression1 operator expression1
 
 operators = [
-    [token.DOUBLE_VBAR],
-    [token.DOUBLE_AMPERSAND],
+    [token.Nonalpha('||')],
+    [token.Nonalpha('&&')],
     [token.ReservedWord('IN')],
     [token.ReservedWord('OR')],
     [token.ReservedWord('EOR')],
     [token.ReservedWord('AND')],
-    [token.DOUBLE_EQUALS, token.EXCLAMATION_EQUALS],
-    [token.LESS, token.LESS_EQUALS, token.GREATER, token.GREATER_EQUALS],
-    [token.DOUBLE_LESS, token.DOUBLE_GREATER, token.COLON],
-    [token.PLUS, token.HYPHEN],
-    [token.ASTERISK, token.SLASH,
+    [token.Nonalpha('=='), token.Nonalpha('!=')],
+    [token.Nonalpha('<'), token.Nonalpha('<='),
+     token.Nonalpha('>'), token.Nonalpha('>=')],
+    [token.Nonalpha('<<'), token.Nonalpha('>>'), token.Nonalpha(':')],
+    [token.Nonalpha('+'), token.Nonalpha('-')],
+    [token.Nonalpha('*'), token.Nonalpha('/'),
      token.ReservedWord('DIV'),
      token.ReservedWord('MOD'),
      token.ReservedWord('REM')],
-    [token.CARET],
+    [token.Nonalpha('^')],
 ]
 
 def parse_binary(ts, precedence_limit = 0):
@@ -481,6 +482,6 @@ def parse_list(ts):
     while True:
         expression = expr.parse_ternary(ts)
         expressions.append(expression)
-        if not ts.consume_if(token.COMMA):
+        if not ts.consume_if(token.Nonalpha(',')):
             break
     return expressions

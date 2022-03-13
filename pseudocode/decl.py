@@ -149,7 +149,7 @@ def parse_name(ts):
             break
         if not isinstance(name[-1], token.Identifier):
             raise ParseError(ts)
-        if not ts.consume_if(token.PERIOD):
+        if not ts.consume_if(token.Nonalpha('.')):
             overload = True
             break
     return name, overload
@@ -160,12 +160,12 @@ def parse(ts):
         variables = []
         while True:
             name, overload = parse_name(ts)
-            ts.consume_assert(token.EQUALS)
+            ts.consume_assert(token.Nonalpha('='))
             expression = expr.parse_ternary(ts)
             variables.append((name, expression))
-            if not ts.consume_if(token.COMMA):
+            if not ts.consume_if(token.Nonalpha(',')):
                 break
-        ts.consume_assert(token.SEMICOLON)
+        ts.consume_assert(token.Nonalpha(';'))
         return decl.Variable(True, datatype, variables)
 
     if ts.consume_if(token.ReservedWord('enumeration')):
@@ -173,7 +173,7 @@ def parse(ts):
         if not isinstance(name, token.Identifier) and \
            not isinstance(name, token.DeclarationIdentifier):
             raise ParseError(ts)
-        ts.consume_assert(token.OBRACE)
+        ts.consume_assert(token.Nonalpha('{'))
         values = []
         while True:
             value = ts.consume()
@@ -181,22 +181,22 @@ def parse(ts):
                not isinstance(value, token.DeclarationIdentifier):
                 raise ParseError(ts)
             values.append(value)
-            if not ts.consume_if(token.COMMA):
+            if not ts.consume_if(token.Nonalpha(',')):
                 break
-        ts.consume_assert(token.CBRACE)
-        ts.consume_assert(token.SEMICOLON)
+        ts.consume_assert(token.Nonalpha('}'))
+        ts.consume_assert(token.Nonalpha(';'))
         return decl.Enumeration(name, values)
 
     if ts.consume_if(token.Identifier('type')):
         name, overload = parse_name(ts)
-        if ts.consume_if(token.SEMICOLON):
+        if ts.consume_if(token.Nonalpha(';')):
             return decl.Type(name, None)
-        if ts.consume_if(token.EQUALS):
+        if ts.consume_if(token.Nonalpha('=')):
             datatype = dtype.parse(ts)
-            ts.consume_assert(token.SEMICOLON)
+            ts.consume_assert(token.Nonalpha(';'))
             return decl.TypeEquals(name, datatype)
         elif ts.consume_if(token.ReservedWord('is')):
-            ts.consume_assert(token.OPAREN)
+            ts.consume_assert(token.Nonalpha('('))
             fields = []
             while True:
                 field_type = dtype.parse(ts)
@@ -205,9 +205,9 @@ def parse(ts):
                    not isinstance(t, token.LinkedIdentifier):
                     raise ParseError(ts)
                 fields.append((field_type, t))
-                if not ts.consume_if(token.COMMA):
+                if not ts.consume_if(token.Nonalpha(',')):
                     break
-            ts.consume_assert(token.CPAREN)
+            ts.consume_assert(token.Nonalpha(')'))
             return decl.Type(name, fields)
         else:
             raise ParseError(ts)
@@ -219,14 +219,14 @@ def parse(ts):
             name.append(ts.consume())
             if not isinstance(name[-1], token.Identifier):
                 raise ParseError(ts)
-            if not ts.consume_if(token.PERIOD):
+            if not ts.consume_if(token.Nonalpha('.')):
                 break
-        ts.consume_assert(token.OBRACKET)
+        ts.consume_assert(token.Nonalpha('['))
         start = expr.parse_binary(ts)
-        ts.consume_assert(token.DOUBLE_PERIOD)
+        ts.consume_assert(token.Nonalpha('..'))
         stop = expr.parse_binary(ts)
-        ts.consume_assert(token.CBRACKET)
-        ts.consume_assert(token.SEMICOLON)
+        ts.consume_assert(token.Nonalpha(']'))
+        ts.consume_assert(token.Nonalpha(';'))
         return decl.Array(dtype.Array(base_type, start, stop), name)
 
 
@@ -240,31 +240,31 @@ def parse(ts):
         name, overload = parse_name(ts)
     else:
         ts.become(sub_ts)
-        if ts.peek() == token.EQUALS or \
-           ts.peek() == token.COMMA or \
-           ts.peek() == token.SEMICOLON:
+        if ts.peek() == token.Nonalpha('=') or \
+           ts.peek() == token.Nonalpha(',') or \
+           ts.peek() == token.Nonalpha(';'):
             variables = []
             while True:
                 if variables:
                     name, overload = parse_name(ts)
                 if not overload:
                     raise ParseError(ts)
-                if ts.consume_if(token.EQUALS):
+                if ts.consume_if(token.Nonalpha('=')):
                     expression = expr.parse_ternary(ts)
                 else:
                     expression = None
                 variables.append((name, expression))
-                if not ts.consume_if(token.COMMA):
+                if not ts.consume_if(token.Nonalpha(',')):
                     break
-            ts.consume_assert(token.SEMICOLON)
+            ts.consume_assert(token.Nonalpha(';'))
             return decl.Variable(False, result_type, variables)
 
-    if ts.consume_if(token.OPAREN):
-        expected_closing = token.CPAREN
+    if ts.consume_if(token.Nonalpha('(')):
+        expected_closing = token.Nonalpha(')')
         functype = FUNCTION
     else:
-        if ts.consume_if(token.OBRACKET):
-            expected_closing = token.CBRACKET
+        if ts.consume_if(token.Nonalpha('[')):
+            expected_closing = token.Nonalpha(']')
         else:
             expected_closing = None
         if result_type == dtype.dt_void:
@@ -276,19 +276,19 @@ def parse(ts):
         if ts.peek() != expected_closing:
             while True:
                 param_type = dtype.parse(ts)
-                by_reference = ts.consume_if(token.AMPERSAND)
+                by_reference = ts.consume_if(token.Nonalpha('&'))
                 t = ts.consume()
                 if not isinstance(t, token.Identifier) and \
                    not isinstance(t, token.LinkedIdentifier):
                     raise ParseError(ts)
                 parameters.append((param_type, t, by_reference))
-                if not ts.consume_if(token.COMMA):
+                if not ts.consume_if(token.Nonalpha(',')):
                     break
         ts.consume_assert(expected_closing)
     else:
         parameters = None
     if functype == SETTER:
-        ts.consume_assert(token.EQUALS)
+        ts.consume_assert(token.Nonalpha('='))
         result_type = dtype.parse(ts)
         result_name = ts.consume()
         if not isinstance(result_name, token.Identifier) and \
@@ -296,7 +296,7 @@ def parse(ts):
             raise ParseError(ts)
     else:
         result_name = None
-    if ts.consume_if(token.SEMICOLON):
+    if ts.consume_if(token.Nonalpha(';')):
         body = None
     elif isinstance(ts.peek(), list):
         body = stmt.parse_block(ts.consume(), stmt.parse_statement)

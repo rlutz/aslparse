@@ -66,9 +66,9 @@ def parse(ts):
         return dtype.dt_bit
 
     if ts.consume_if(token.ReservedWord('bits')):
-        ts.consume_assert(token.OPAREN)
+        ts.consume_assert(token.Nonalpha('('))
         expression = expr.parse_ternary(ts)
-        ts.consume_assert(token.CPAREN)
+        ts.consume_assert(token.Nonalpha(')'))
         return dtype.Bits(expression)
 
     if ts.consume_if(token.ReservedWord('boolean')):
@@ -77,13 +77,13 @@ def parse(ts):
     if ts.consume_if(token.ReservedWord('integer')):
         return dtype.dt_integer
 
-    if ts.consume_if(token.OPAREN):
+    if ts.consume_if(token.Nonalpha('(')):
         partial_types = []
         while True:
             partial_types.append(dtype.parse(ts))
-            if not ts.consume_if(token.COMMA):
+            if not ts.consume_if(token.Nonalpha(',')):
                 break
-        ts.consume_assert(token.CPAREN)
+        ts.consume_assert(token.Nonalpha(')'))
         return dtype.Compound(partial_types)
 
     name = []
@@ -93,6 +93,6 @@ def parse(ts):
            not isinstance(name[-1], token.LinkedIdentifier):
             raise ParseError(ts)
         if isinstance(name[-1], token.LinkedIdentifier) or \
-           not ts.consume_if(token.PERIOD):
+           not ts.consume_if(token.Nonalpha('.')):
             break
     return dtype.Custom(name)

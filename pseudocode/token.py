@@ -136,48 +136,6 @@ class Nonalpha(Token):
 
 NEWLINE = token.Nonalpha('\\n')
 # '\t', '\r', ' ': whitespace
-EXCLAMATION_MARK = token.Nonalpha('!')
-#QUOTATION_MARK = token.Nonalpha('"')
-#HASH = token.Nonalpha('#')
-#DOLLAR = token.Nonalpha('$')
-#PERCENT = token.Nonalpha('%')
-AMPERSAND = token.Nonalpha('&')
-DOUBLE_AMPERSAND = token.Nonalpha('&&')
-# '\'': bit vector # APOSTROPHE
-OPAREN = token.Nonalpha('(')
-CPAREN = token.Nonalpha(')')
-ASTERISK = token.Nonalpha('*')
-PLUS = token.Nonalpha('+')
-PLUS_COLON = token.Nonalpha('+:')
-COMMA = token.Nonalpha(',')
-HYPHEN = token.Nonalpha('-')
-PERIOD = token.Nonalpha('.')
-DOUBLE_PERIOD = token.Nonalpha('..')
-SLASH = token.Nonalpha('/')
-COLON = token.Nonalpha(':')
-SEMICOLON = token.Nonalpha(';')
-LESS = token.Nonalpha('<')
-DOUBLE_LESS = token.Nonalpha('<<')
-LESS_EQUALS = token.Nonalpha('<=')
-EQUALS = token.Nonalpha('=')
-DOUBLE_EQUALS = token.Nonalpha('==')
-EXCLAMATION_EQUALS = token.Nonalpha('!=')
-GREATER = token.Nonalpha('>')
-DOUBLE_GREATER = token.Nonalpha('>>')
-GREATER_EQUALS = token.Nonalpha('>=')
-#QUESTION_MARK = token.Nonalpha('?')
-#AT = token.Nonalpha('@')
-OBRACKET = token.Nonalpha('[')
-#DOUBLE_BACKSLASH = token.Nonalpha('\\')
-CBRACKET = token.Nonalpha(']')
-CARET = token.Nonalpha('^')
-#UNDERSCORE = token.Nonalpha('_')
-#BACKTICK = token.Nonalpha('`')
-OBRACE = token.Nonalpha('{')
-VBAR = token.Nonalpha('|')
-DOUBLE_VBAR = token.Nonalpha('||')
-CBRACE = token.Nonalpha('}')
-#TILDE = token.Nonalpha('~')
 
 
 class Tokenizer:
@@ -265,10 +223,10 @@ class Tokenizer:
                 pos += 1
             elif ch == '!':
                 if pos + 1 < len(data) and data[pos + 1] == '=':
-                    self.tokens.append(token.EXCLAMATION_EQUALS)
+                    self.tokens.append(token.Nonalpha('!='))
                     pos += 2
                 else:
-                    self.tokens.append(token.EXCLAMATION_MARK)
+                    self.tokens.append(token.Nonalpha('!'))
                     pos += 1
             elif ch == '"':
                 try:
@@ -290,10 +248,10 @@ class Tokenizer:
                 raise LexError(data, pos)
             elif ch == '&':
                 if pos + 1 < len(data) and data[pos + 1] == '&':
-                    self.tokens.append(token.DOUBLE_AMPERSAND)
+                    self.tokens.append(token.Nonalpha('&&'))
                     pos += 2
                 else:
-                    self.tokens.append(token.AMPERSAND)
+                    self.tokens.append(token.Nonalpha('&'))
                     pos += 1
             elif ch == '\'':
                 try:
@@ -304,37 +262,37 @@ class Tokenizer:
                 self.tokens.append(token.Bitvector(name))
                 pos += n + 2
             elif ch == '(':
-                self.tokens.append(token.OPAREN)
+                self.tokens.append(token.Nonalpha('('))
                 self.parentheses.append('()')
                 pos += 1
             elif ch == ')':
                 if not self.parentheses or self.parentheses.pop() != '()':
                     raise LexError(data, pos)
-                self.tokens.append(token.CPAREN)
+                self.tokens.append(token.Nonalpha(')'))
                 pos += 1
             elif ch == '*':
-                self.tokens.append(token.ASTERISK)
+                self.tokens.append(token.Nonalpha('*'))
                 pos += 1
             elif ch == '+':
                 if pos + 1 < len(data) and data[pos + 1] == ':':
-                    self.tokens.append(token.PLUS_COLON)
+                    self.tokens.append(token.Nonalpha('+:'))
                     pos += 2
                 else:
-                    self.tokens.append(token.PLUS)
+                    self.tokens.append(token.Nonalpha('+'))
                     pos += 1
             elif ch == ',':
-                self.tokens.append(token.COMMA)
+                self.tokens.append(token.Nonalpha(','))
                 pos += 1
             elif ch == '-':
-                self.tokens.append(token.HYPHEN)
+                self.tokens.append(token.Nonalpha('-'))
                 pos += 1
             elif ch == '.' and (pos + 1 == len(data) or not (
                     data[pos + 1] >= '0' and data[pos + 1] <= '9')):
                 if pos + 1 < len(data) and data[pos + 1] == '.':
-                    self.tokens.append(token.DOUBLE_PERIOD)
+                    self.tokens.append(token.Nonalpha('..'))
                     pos += 2
                 else:
-                    self.tokens.append(token.PERIOD)
+                    self.tokens.append(token.Nonalpha('.'))
                     pos += 1
             elif ch == '/':
                 if pos + 1 < len(data) and data[pos + 1] == '*':
@@ -348,7 +306,7 @@ class Tokenizer:
                     except ValueError:
                         raise LexError(data, pos)
                 else:
-                    self.tokens.append(token.SLASH)
+                    self.tokens.append(token.Nonalpha('/'))
                     pos += 1
             elif ch >= '0' and ch <= '9' or ch == '.':
                 if pos + 1 < len(data) and data[pos:pos + 2] == '0x':
@@ -382,44 +340,44 @@ class Tokenizer:
                            ch == '_' or ch >= 'a' and ch <= 'z'):
                     raise LexError(data, pos)
             elif ch == ':':
-                self.tokens.append(token.COLON)
+                self.tokens.append(token.Nonalpha(':'))
                 pos += 1
             elif ch == ';':
-                self.tokens.append(token.SEMICOLON)
+                self.tokens.append(token.Nonalpha(';'))
                 pos += 1
             elif ch == '<':
                 if pos + 1 < len(data) and data[pos + 1] == '<':
-                    self.tokens.append(token.DOUBLE_LESS)
+                    self.tokens.append(token.Nonalpha('<<'))
                     pos += 2
                 elif pos + 1 < len(data) and data[pos + 1] == '=':
-                    self.tokens.append(token.LESS_EQUALS)
+                    self.tokens.append(token.Nonalpha('<='))
                     pos += 2
                 else:
-                    self.tokens.append(token.LESS)
+                    self.tokens.append(token.Nonalpha('<'))
                     pos += 1
             elif ch == '=':
                 if pos + 1 < len(data) and data[pos + 1] == '=':
-                    self.tokens.append(token.DOUBLE_EQUALS)
+                    self.tokens.append(token.Nonalpha('=='))
                     pos += 2
                 else:
-                    self.tokens.append(token.EQUALS)
+                    self.tokens.append(token.Nonalpha('='))
                     pos += 1
             elif ch == '>':
                 if pos + 1 < len(data) and data[pos + 1] == '>':
-                    self.tokens.append(token.DOUBLE_GREATER)
+                    self.tokens.append(token.Nonalpha('>>'))
                     pos += 2
                 elif pos + 1 < len(data) and data[pos + 1] == '=':
-                    self.tokens.append(token.GREATER_EQUALS)
+                    self.tokens.append(token.Nonalpha('>='))
                     pos += 2
                 else:
-                    self.tokens.append(token.GREATER)
+                    self.tokens.append(token.Nonalpha('>'))
                     pos += 1
             elif ch == '?':
                 raise LexError(data, pos)
             elif ch == '@':
                 raise LexError(data, pos)
             elif ch == '[':
-                self.tokens.append(token.OBRACKET)
+                self.tokens.append(token.Nonalpha('['))
                 self.parentheses.append('[]')
                 pos += 1
             elif ch == '\\':
@@ -427,28 +385,28 @@ class Tokenizer:
             elif ch == ']':
                 if not self.parentheses or self.parentheses.pop() != '[]':
                     raise LexError(data, pos)
-                self.tokens.append(token.CBRACKET)
+                self.tokens.append(token.Nonalpha(']'))
                 pos += 1
             elif ch == '^':
-                self.tokens.append(token.CARET)
+                self.tokens.append(token.Nonalpha('^'))
                 pos += 1
             elif ch == '`':
                 raise LexError(data, pos)
             elif ch == '{':
-                self.tokens.append(token.OBRACE)
+                self.tokens.append(token.Nonalpha('{'))
                 self.parentheses.append('{}')
                 pos += 1
             elif ch == '|':
                 if pos + 1 < len(data) and data[pos + 1] == '|':
-                    self.tokens.append(token.DOUBLE_VBAR)
+                    self.tokens.append(token.Nonalpha('||'))
                     pos += 2
                 else:
-                    self.tokens.append(token.VBAR)
+                    self.tokens.append(token.Nonalpha('|'))
                     pos += 1
             elif ch == '}':
                 if not self.parentheses or self.parentheses.pop() != '{}':
                     raise LexError(data, pos)
-                self.tokens.append(token.CBRACE)
+                self.tokens.append(token.Nonalpha('}'))
                 pos += 1
             elif ch == '~':
                 raise LexError(data, pos)
@@ -474,7 +432,7 @@ class Tokenizer:
 
         for part in parts[:-1]:
             self.tokens.append(token.Identifier(part))
-            self.tokens.append(token.PERIOD)
+            self.tokens.append(token.Nonalpha('.'))
         self.tokens.append(token.LinkedIdentifier(parts[-1]))
 
     def process_anchor(self, data):
@@ -492,7 +450,7 @@ class Tokenizer:
 
         for part in parts[:-1]:
             self.tokens.append(token.Identifier(part))
-            self.tokens.append(token.PERIOD)
+            self.tokens.append(token.Nonalpha('.'))
         self.tokens.append(token.DeclarationIdentifier(parts[-1]))
 
     def process_end(self):
