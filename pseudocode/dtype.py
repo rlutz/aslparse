@@ -45,8 +45,8 @@ class Array:
         self.stop = stop
 
     def __str__(self):
-        return 'array[%s..%s] %s' % (str(self.start), str(self.stop),
-                                     str(self.base))
+        return 'array [%s..%s] of %s' % (str(self.start), str(self.stop),
+                                         str(self.base))
 
 dt_bit = dtype.Bit()
 dt_boolean = dtype.Boolean()
@@ -62,6 +62,16 @@ dt_void = dtype.Void()
 # datatype-list :== datatype | datatype-list ',' datatype
 
 def parse(ts):
+    if ts.consume_if(token.ReservedWord('array')):
+        ts.consume_assert(token.Nonalpha('['))
+        start = expr.parse_binary(ts)
+        ts.consume_assert(token.Nonalpha('..'))
+        stop = expr.parse_binary(ts)
+        ts.consume_assert(token.Nonalpha(']'))
+        ts.consume_assert(token.ReservedWord('of'))
+        base_type = dtype.parse(ts)
+        return dtype.Array(base_type, start, stop)
+
     if ts.consume_if(token.ReservedWord('bit')):
         return dtype.dt_bit
 

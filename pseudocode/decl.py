@@ -74,9 +74,11 @@ class Array:
         self.name = name
 
     def dump(self):
-        return ['%s %s;' % (
-            str(self.datatype),
-            '.'.join(str(part) for part in self.name))]
+        return ['array %s %s[%s..%s];' % (
+            str(self.datatype.base),
+            '.'.join(str(part) for part in self.name),
+            str(self.datatype.start),
+            str(self.datatype.stop))]
 
 class Enumeration:
     def __init__(self, name, values):
