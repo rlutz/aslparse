@@ -156,6 +156,8 @@ class FileProcessor:
         if name == 'ps':
             if self.container is None:
                 self.error('closing ps tag without opening tag')
+            if self.container.fragment is None:
+                self.error('ps tag does not contain pstext tag')
             self.container = None
         elif name == 'pstext':
             if self.fragment is None:
