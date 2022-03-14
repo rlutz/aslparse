@@ -21,7 +21,8 @@ class LexError(Exception):
         for fn, lineno, func, text in traceback.extract_tb(exc_traceback):
             if fn.startswith(cwd):
                 fn = fn[len(cwd):]
-            print('%-26s%-18s%s' % ('%s:%s' % (fn, lineno), func, text[:36]))
+            sys.stderr.write('%-26s%-18s%s\n' % (
+                '%s:%s' % (fn, lineno), func, text[:36]))
         del exc_traceback  # avoid circular reference
 
         start = 0
@@ -38,9 +39,9 @@ class LexError(Exception):
         except ValueError:
             stop = len(self.data)
 
-        print()
-        print(self.data[start:stop])
-        print(' ' * (self.pos - start) + '^')
+        sys.stderr.write('\n')
+        sys.stderr.write(self.data[start:stop] + '\n')
+        sys.stderr.write(' ' * (self.pos - start) + '^\n')
 
 class ParseError(Exception):
     def __init__(self, ts):
@@ -49,7 +50,7 @@ class ParseError(Exception):
     def report(self):
         exc_type, exc_value, exc_traceback = sys.exc_info()
 
-        #print('Traceback (most recent call last):')
+        #sys.stderr.write('Traceback (most recent call last):\n')
         #traceback.print_tb(exc_traceback)
 
         cwd = os.getcwd()
@@ -60,18 +61,20 @@ class ParseError(Exception):
         for fn, lineno, func, text in traceback.extract_tb(exc_traceback):
             if fn.startswith(cwd):
                 fn = fn[len(cwd):]
-            print('%-26s%-18s%s' % ('%s:%s' % (fn, lineno), func, text[:36]))
+            sys.stderr.write('%-26s%-18s%s\n' % (
+                '%s:%s' % (fn, lineno), func, text[:36]))
         del exc_traceback  # avoid circular reference
 
-        print()
+        sys.stderr.write('\n')
         for i, t in enumerate(self.ts.tokens):
             if i == self.ts.pos:
-                print('###', end = ' ')
+                sys.stderr.write('### ')
             else:
-                print('   ', end = ' ')
+                sys.stderr.write('    ')
             if isinstance(t, list):
-                print(' '.join('[...]' if isinstance(t1, list) else str(t1)
-                               for t1 in t[:10])
-                          + (' ...' if len(t) > 10 else ''))
+                sys.stderr.write('%s%s\n' % (
+                    ' '.join('[...]' if isinstance(t1, list) else str(t1)
+                             for t1 in t[:10]),
+                    ' ...' if len(t) > 10 else ''))
             else:
-                print(str(t))
+                sys.stderr.write(str(t) + '\n')
