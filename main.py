@@ -100,17 +100,12 @@ class Fragment:
         try:
             if not tokens:
                 pass
-            elif (tokens[-1] == token.NEWLINE and
-                  tokens[-2] == token.Nonalpha(';')) \
-                    or isinstance(tokens[-1], list) \
-                    or tokens[0] == token.Identifier('type'):
-                if is_shared_pseudocode:
-                    self.body = stmt.parse_block(tokens, decl.parse)
-                else:
-                    self.body = stmt.parse_block(tokens, stmt.parse_statement)
-                if is_shared_pseudocode:
-                    for declaration in self.body:
-                        ns.process(declaration)
+            elif is_shared_pseudocode:
+                self.body = stmt.parse_block(tokens, decl.parse)
+                for declaration in self.body:
+                    ns.process(declaration)
+            elif self.name is not None:
+                self.body = stmt.parse_block(tokens, stmt.parse_statement)
             else:
                 assert tokens[-1] == token.NEWLINE
                 self.expression = tstream.parse(tokens, 0, len(tokens) - 1,
