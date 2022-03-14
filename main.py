@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+# Parser and resolver for ARM ASL pseudocode
+# Copyright (C) 2019, 2021-2022 Roland Lutz
+
 import os
 import sys
 import xml.parsers.expat

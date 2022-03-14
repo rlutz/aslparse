@@ -1,3 +1,6 @@
+# Parser and resolver for ARM ASL pseudocode
+# Copyright (C) 2019, 2021-2022 Roland Lutz
+
 from . import token, expr, stmt, dtype, decl
 from . import ParseError
 
