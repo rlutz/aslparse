@@ -29,6 +29,10 @@ NONALPHA = {
     '{', '|', '||', '}'
 }
 
+# Using singletons here has an enormous performance impact (execution
+# time is about 2.5x higher as with interned strings), but I think the
+# improved readability is worth it.
+
 def singleton(x):
     actual_new = x.__new__
 
