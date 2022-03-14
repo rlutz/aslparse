@@ -154,7 +154,7 @@ class FileProcessor:
         self.fragment = None
         self.fragments = []
 
-        self.p = xml.parsers.expat.ParserCreate(namespace_separator = '!')
+        self.p = xml.parsers.expat.ParserCreate()
         self.p.StartElementHandler = self.StartElementHandler
         self.p.EndElementHandler = self.EndElementHandler
         self.p.CharacterDataHandler = self.CharacterDataHandler
