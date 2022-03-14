@@ -17,6 +17,7 @@ class LexError(Exception):
         if not cwd.endswith('/'):
             cwd = cwd + '/'
 
+        sys.stderr.write('\n')
         for fn, lineno, func, text in traceback.extract_tb(exc_traceback):
             if fn.startswith(cwd):
                 fn = fn[len(cwd):]
@@ -55,6 +56,7 @@ class ParseError(Exception):
         if not cwd.endswith('/'):
             cwd = cwd + '/'
 
+        sys.stderr.write('\n')
         for fn, lineno, func, text in traceback.extract_tb(exc_traceback):
             if fn.startswith(cwd):
                 fn = fn[len(cwd):]

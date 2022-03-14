@@ -8,6 +8,17 @@ import xml.parsers.expat
 
 from pseudocode import *
 
+class Progress:
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __enter__(self):
+        sys.stderr.write(self.msg + ' ...')
+        sys.stderr.flush()
+
+    def __exit__(self, *exc_info):
+        sys.stderr.write('\x1b[u\x1b[K')
+
 class Fragment:
     def __init__(self, file_processor,
                  mayhavelinks, section = None, rep_section = None):
@@ -140,11 +151,12 @@ class FileProcessor:
         self.p.EndElementHandler = self.EndElementHandler
         self.p.CharacterDataHandler = self.CharacterDataHandler
 
-        with open(self.path, 'rb') as f:
-            try:
-                self.p.ParseFile(f)
-            except xml.parsers.expat.ExpatError as e:
-                self.error(str(e), lineno = e.lineno - 1)
+        with Progress('processing %s' % fn):
+            with open(self.path, 'rb') as f:
+                try:
+                    self.p.ParseFile(f)
+                except xml.parsers.expat.ExpatError as e:
+                    self.error(str(e), lineno = e.lineno - 1)
 
     def StartElementHandler(self, name, attributes):
         if name == 'ps':
@@ -207,6 +219,8 @@ def escape_html(s):
             .replace('<', '&lt;').replace('>', '&gt;')
 
 def main(base_dir):
+    sys.stderr.write('\x1b[s')
+
     file_processors = [FileProcessor(base_dir, fn)
                        for fn in sorted(os.listdir(base_dir))
                        if fn[0] != '.' and fn.endswith('.xml')
@@ -215,10 +229,12 @@ def main(base_dir):
     #for l in ns.global_ns.dump():
     #    print('| ' + l)
 
-    scope.process_namespace(ns.global_ns)
+    with Progress('resolving library'):
+        scope.process_namespace(ns.global_ns)
 
-    with open('output.html', 'w') as f:
-        f.write('''\
+    with Progress('writing output'):
+        with open('output.html', 'w') as f:
+            f.write('''\
 <!DOCTYPE html>
 <html>
   <head>
@@ -228,24 +244,25 @@ def main(base_dir):
   </head>
   <body>
 ''')
-        for file_processor in file_processors:
-            f.write('<h3>%s</h3>\n' % file_processor.fn)
-            for fragment in file_processor.fragments:
-                if fragment.name is not None:
-                    f.write('%s<br>\n' % escape_html(fragment.name))
-                f.write('<pre class="sect_%s">' % str(fragment.section).lower())
-                if fragment.body is not None:
-                    for statement in fragment.body:
-                        for l in statement.dump():
-                            f.write(escape_html(l) + '\n')
-                elif fragment.expression is not None:
-                    s = str(fragment.expression)
-                    f.write(escape_html(s) + '\n')
-                else:
-                    f.write('// empty\n')
-                f.write('</pre>\n')
+            for file_processor in file_processors:
+                f.write('<h3>%s</h3>\n' % file_processor.fn)
+                for fragment in file_processor.fragments:
+                    if fragment.name is not None:
+                        f.write('%s<br>\n' % escape_html(fragment.name))
+                    f.write('<pre class="sect_%s">'
+                              % str(fragment.section).lower())
+                    if fragment.body is not None:
+                        for statement in fragment.body:
+                            for l in statement.dump():
+                                f.write(escape_html(l) + '\n')
+                    elif fragment.expression is not None:
+                        s = str(fragment.expression)
+                        f.write(escape_html(s) + '\n')
+                    else:
+                        f.write('// empty\n')
+                    f.write('</pre>\n')
 
-        f.write('</body></html>\n')
+            f.write('</body></html>\n')
 
 if __name__ == '__main__':
     if len(sys.argv) != 2 or sys.argv[1].startswith('-'):
