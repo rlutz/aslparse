@@ -10,5 +10,5 @@ and outputs them as a single HTML file.
 Usage: ./main.py path/to/ISA_v85A_AArch32_xml_00bet9/
        ./main.py path/to/ISA_v85A_A64_xml_00bet9/
 
-Only the the 00bet9 version of the 32-bit and 64-bit architecture have
-been tested; other ISA may, but probably won't, work.
+Only the 00bet9 version of the 32-bit and 64-bit architectures has
+been tested; other ISAs may, but probably won't, work.
