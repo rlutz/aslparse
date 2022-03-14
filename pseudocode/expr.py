@@ -114,8 +114,8 @@ class Ternary:
         self.arg1 = arg1
 
     def __str__(self):
-        return '%s ? %s : %s' % (str(self.condition),
-                                 str(self.arg0), str(self.arg1))
+        return 'if %s then %s else %s' % (str(self.condition),
+                                          str(self.arg0), str(self.arg1))
 
 class Bits:
     def __init__(self, elements):
