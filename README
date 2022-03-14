@@ -1,0 +1,14 @@
+Parser and resolver for Arm's Architecture Specification Language
+=================================================================
+
+This Python package reads ASL pseudocode, generates a token stream and
+syntax tree for it, and does some basic identifier resolution on the
+“shared pseudocode” section.  A main program is provided which reads
+all ASL snippets from the XML files in an ISA specification directory
+and outputs them as a single HTML file.
+
+Usage: ./main.py path/to/ISA_v85A_AArch32_xml_00bet9/
+       ./main.py path/to/ISA_v85A_A64_xml_00bet9/
+
+Only the the 00bet9 version of the 32-bit and 64-bit architecture have
+been tested; other ISA may, but probably won't, work.
