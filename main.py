@@ -248,4 +248,10 @@ def main(base_dir):
         f.write('</body></html>\n')
 
 if __name__ == '__main__':
+    if len(sys.argv) != 2 or sys.argv[1].startswith('-'):
+        sys.stderr.write(
+            "Usage: %s path/to/ISA_v85A_AArch32_xml_00bet9/\n" % sys.argv[0])
+        sys.stderr.write(
+            "       %s path/to/ISA_v85A_A64_xml_00bet9/\n" % sys.argv[0])
+        sys.exit(1)
     main(sys.argv[1])
